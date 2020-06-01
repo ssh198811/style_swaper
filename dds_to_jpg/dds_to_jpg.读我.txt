@@ -1,0 +1,1 @@
+dds_to_jpg.exe .\test.dds .\test.jpg .\test.tga

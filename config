@@ -1,0 +1,15 @@
+[core]
+	bare = true
+	repositoryformatversion = 0
+	filemode = false
+	symlinks = false
+	ignorecase = true
+[remote "origin"]
+	url = https://github.com/csbbbv/style_swaper-master.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[remote]
+	pushdefault = origin-sb
+[remote "origin-sb"]
+	url = https://github.com/ssh198811/style_swaper
+	fetch = +refs/heads/*:refs/remotes/origin-sb/*
+	prune = false
