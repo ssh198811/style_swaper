@@ -674,7 +674,7 @@ if __name__=='__main__':
         def __init__(self):
             super(My_gen_style_thread2, self).__init__()
             self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
-        def set_para(self,txt_path='',work_='',lerg_value=50,chosen_style_pic=''):
+        def set_para(self,txt_path='',work_='',lerg_value=50,chosen_style_pic='',chosen_content_file_list=[],dir_dict={}):
             # txt_file = self.txt_path
             # work_ = self.ui.project_base_dir.text()
             # lerp_value = self.ui.change_coe_horizontalSlider2.value()
@@ -683,6 +683,9 @@ if __name__=='__main__':
             self.work_=work_
             self.lerg_value=lerg_value
             self.chosen_style_pic=chosen_style_pic
+            self.chosen_content_file_list=chosen_content_file_list
+            self.dir_dict=dir_dict
+
             # self.seamless=seamless
         def save_all(self):
             # if self.seamless is False:
@@ -694,58 +697,66 @@ if __name__=='__main__':
             # f.readline()
 
 
-            style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic)
+            style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
             for file in f:
-                file=file.replace("\n","")
-                file_real_path=self.work_+'/'+file
-                file_name=os.path.basename(file_real_path)
-                parent_path=os.path.dirname(file_real_path)
-                self.style_transfer_path = parent_path + "/style_transfer/"
-                # parent_path+=is_seamless
-                if os.path.exists(self.style_transfer_path) is False:
-                    InfoNotifier.InfoNotifier.g_progress_info.append("请先将dds转化为jpg,tga格式")
-                    return
-                self.style_output=parent_path+'/style_transfer/style_output/'
 
-                self.lerp_output=parent_path+'/style_transfer/lerg_output/'
-                self.dds_output=parent_path+'/style_transfer/dds_output/'
-                if os.path.exists(self.style_output) is False:
-                    os.makedirs(self.style_output)
-                if os.path.exists(self.lerp_output) is False:
-                    os.makedirs(self.lerp_output)
-                if os.path.exists(self.dds_output) is False:
-                    os.makedirs(self.dds_output)
-                jpg_path = self.style_transfer_path + file_name.replace(".dds", ".jpg")
-                tga_path = self.style_transfer_path + file_name.replace(".dds", ".tga")
-                pic_list=[jpg_path]
-                # style_main2(pic_list,self.chosen_style_pic,self.style_output)
-                #lerp
-                style_out_pic_path=self.style_output+style_name+'/'+file_name.replace(".dds",".jpg")
-                lerp_out_path=self.lerp_output+style_name+'/'+file_name.replace(".dds",".jpg")
-                if os.path.exists(self.lerp_output+style_name+'/') is False:
-                    os.makedirs(self.lerp_output+style_name+'/')
+                file=file.replace("\n","").replace("\\","/")
+                a = False
+                # 判断该图片是否在选中目录中
+                for sub_file in self.chosen_content_file_list:
+                    if self.dir_dict[sub_file] in file:
+                        a = True
+                        break
+                if a is True:
+                    file_real_path=self.work_+'/'+file
+                    file_name=os.path.basename(file_real_path)
+                    parent_path=os.path.dirname(file_real_path)
+                    self.style_transfer_path = parent_path + "/style_transfer/"
+                    # parent_path+=is_seamless
+                    if os.path.exists(self.style_transfer_path) is False:
+                        InfoNotifier.InfoNotifier.g_progress_info.append("请先将dds转化为jpg,tga格式")
+                        return
+                    self.style_output=parent_path+'/style_transfer/style_output/'
 
-                if os.path.exists(jpg_path) is False:
-                    print(jpg_path + " is not exist!")
-                    continue
+                    self.lerp_output=parent_path+'/style_transfer/lerg_output/'
+                    self.dds_output=parent_path+'/style_transfer/dds_output/'
+                    if os.path.exists(self.style_output) is False:
+                        os.makedirs(self.style_output)
+                    if os.path.exists(self.lerp_output) is False:
+                        os.makedirs(self.lerp_output)
+                    if os.path.exists(self.dds_output) is False:
+                        os.makedirs(self.dds_output)
+                    jpg_path = self.style_transfer_path + file_name.replace(".dds", ".jpg")
+                    tga_path = self.style_transfer_path + file_name.replace(".dds", ".tga")
+                    pic_list=[jpg_path]
+                    # style_main2(pic_list,self.chosen_style_pic,self.style_output)
+                    #lerp
+                    style_out_pic_path=self.style_output+style_name+'/'+file_name.replace(".dds",".jpg")
+                    lerp_out_path=self.lerp_output+style_name+'/'+file_name.replace(".dds",".jpg")
+                    if os.path.exists(self.lerp_output+style_name+'/') is False:
+                        os.makedirs(self.lerp_output+style_name+'/')
 
-                lerp_ret,_=gen_lerp_ret.lerp_img(jpg_path,style_out_pic_path,self.lerg_value)
-                gen_lerp_ret.write_img(lerp_ret,lerp_out_path)
-                #combine alpha c
-                tga_img=Image.open(tga_path)
-                jpg_img=Image.open(lerp_out_path)
-                ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
-                ir, ig, ib = jpg_img.split()
-                tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
-                lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
-                tga_img.save(lerp_out_path, quality=100)
-                print(f"generate tga image {lerp_out_path} after lerp op.")
-                dds_out=self.dds_output+style_name+'/'
-                if os.path.exists(dds_out) is False:
-                    os.makedirs(dds_out)
-                main_cmd=f"{self.texconv_path} -dxt5 -file {lerp_out_path} -outdir {dds_out}"
-                main_cmd.replace("\n","")
-                os.system(main_cmd)
+                    if os.path.exists(jpg_path) is False:
+                        print(jpg_path + " is not exist!")
+                        continue
+
+                    lerp_ret,_=gen_lerp_ret.lerp_img(jpg_path,style_out_pic_path,self.lerg_value)
+                    gen_lerp_ret.write_img(lerp_ret,lerp_out_path)
+                    #combine alpha c
+                    tga_img=Image.open(tga_path)
+                    jpg_img=Image.open(lerp_out_path)
+                    ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
+                    ir, ig, ib = jpg_img.split()
+                    tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
+                    lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
+                    tga_img.save(lerp_out_path, quality=100)
+                    print(f"generate tga image {lerp_out_path} after lerp op.")
+                    dds_out=self.dds_output+style_name+'/'
+                    if os.path.exists(dds_out) is False:
+                        os.makedirs(dds_out)
+                    main_cmd=f"{self.texconv_path} -dxt5 -file {lerp_out_path} -outdir {dds_out}"
+                    main_cmd.replace("\n","")
+                    os.system(main_cmd)
             InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
             self._signal.emit()
         def run(self):
@@ -755,11 +766,13 @@ if __name__=='__main__':
         def __init__(self):
             super(My_gen_seamless_thread2, self).__init__()
             self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
-        def set_para(self,txt_path='',work_='',lerg_value=50,chosen_style_pic=''):
+        def set_para(self,txt_path='',work_='',lerg_value=50,chosen_style_pic='',chosen_content_file_list=[],dir_dict={}):
             self.txt_path = txt_path
             self.work_ = work_
             self.lerg_value = lerg_value
             self.chosen_style_pic = chosen_style_pic
+            self.chosen_content_file_list=chosen_content_file_list
+            self.dir_dict=dir_dict
         def expanded(self):
             pad = 256
             style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
@@ -767,147 +780,162 @@ if __name__=='__main__':
             # f.readline()
 
             for file in f:
-                file = file.replace("\n", "")
-                file_real_path = self.work_ + '/' + file
-                file_name = os.path.basename(file_real_path)
-                parent_path = os.path.dirname(file_real_path)
-                self.style_transfer_path = parent_path + "/style_transfer/"
-                # parent_path+=is_seamless
-                if os.path.exists(self.style_transfer_path) is False:
-                    InfoNotifier.InfoNotifier.g_progress_info.append("请先将dds转化为jpg,tga格式")
-                    return
+                file = file.replace("\n", "").replace("\\","/")
+                a = False
+                # 判断该图片是否在选中目录中
+                for sub_file in self.chosen_content_file_list:
+                    if self.dir_dict[sub_file] in file:
+                        a = True
+                        break
+                if a is True:
+                    file_real_path = self.work_ + '/' + file
+                    file_name = os.path.basename(file_real_path)
+                    parent_path = os.path.dirname(file_real_path)
+                    self.style_transfer_path = parent_path + "/style_transfer/"
+                    # parent_path+=is_seamless
+                    if os.path.exists(self.style_transfer_path) is False:
+                        InfoNotifier.InfoNotifier.g_progress_info.append("请先将dds转化为jpg,tga格式")
+                        return
 
-                parent_path += '/style_transfer/expanded'
-                self.expanded_transfer = parent_path + '/expanded_transfer/'
-                self.style_output = parent_path + '/style_output/'
-                self.lerp_output = parent_path + '/lerg_output/'
-                self.dds_output = parent_path + '/dds_output/'
-                self.seamless_output = parent_path + '/seamless/'
-                if os.path.exists(self.style_output) is False:
-                    os.makedirs(self.style_output)
-                if os.path.exists(self.lerp_output) is False:
-                    os.makedirs(self.lerp_output)
-                if os.path.exists(self.dds_output) is False:
-                    os.makedirs(self.dds_output)
-                if os.path.exists(self.expanded_transfer) is False:
-                    os.makedirs(self.expanded_transfer)
-                if os.path.exists(self.seamless_output) is False:
-                    os.makedirs(self.seamless_output)
+                    parent_path += '/style_transfer/expanded'
+                    self.expanded_transfer = parent_path + '/expanded_transfer/'
+                    self.style_output = parent_path + '/style_output/'
+                    self.lerp_output = parent_path + '/lerg_output/'
+                    self.dds_output = parent_path + '/dds_output/'
+                    self.seamless_output = parent_path + '/seamless/'
+                    if os.path.exists(self.style_output) is False:
+                        os.makedirs(self.style_output)
+                    if os.path.exists(self.lerp_output) is False:
+                        os.makedirs(self.lerp_output)
+                    if os.path.exists(self.dds_output) is False:
+                        os.makedirs(self.dds_output)
+                    if os.path.exists(self.expanded_transfer) is False:
+                        os.makedirs(self.expanded_transfer)
+                    if os.path.exists(self.seamless_output) is False:
+                        os.makedirs(self.seamless_output)
 
-                jpg_path = self.style_transfer_path + file_name.replace(".dds", ".jpg")
-                tga_path = self.style_transfer_path + file_name.replace(".dds", ".tga")
-                ##expand
-                img_jpg = Image.open(jpg_path)
-                img_tga = Image.open(tga_path)
-                width = img_jpg.width
-                height = img_jpg.height
-                assert width == img_tga.width and height == img_tga.height
+                    jpg_path = self.style_transfer_path + file_name.replace(".dds", ".jpg")
+                    tga_path = self.style_transfer_path + file_name.replace(".dds", ".tga")
+                    ##expand
+                    img_jpg = Image.open(jpg_path)
+                    img_tga = Image.open(tga_path)
+                    width = img_jpg.width
+                    height = img_jpg.height
+                    assert width == img_tga.width and height == img_tga.height
 
-                img_jpg_pad = Image.new("RGB", (width * 3, height * 3))
-                img_tga_pad = Image.new("RGBA", (width * 3, height * 3))
-                for i in range(3):
-                    for j in range(3):
-                        img_jpg_pad.paste(img_jpg, (i * width, j * height, (i + 1) * width, (j + 1) * height))
-                        img_tga_pad.paste(img_tga, (i * width, j * height, (i + 1) * width, (j + 1) * height))
-                img_jpg_crop = img_jpg_pad.crop((width - pad, height - pad, 2 * width + pad, 2 * height + pad))
-                img_jpg_crop.save(self.expanded_transfer + os.path.basename(jpg_path), quality=100)
-                print(self.expanded_transfer + os.path.basename(jpg_path))
-                img_tga_crop = img_tga_pad.crop((width - pad, height - pad, 2 * width + pad, 2 * height + pad))
-                img_tga_crop.save(self.expanded_transfer + os.path.basename(tga_path), quality=100)
-                print(self.expanded_transfer + os.path.basename(tga_path))
+                    img_jpg_pad = Image.new("RGB", (width * 3, height * 3))
+                    img_tga_pad = Image.new("RGBA", (width * 3, height * 3))
+                    for i in range(3):
+                        for j in range(3):
+                            img_jpg_pad.paste(img_jpg, (i * width, j * height, (i + 1) * width, (j + 1) * height))
+                            img_tga_pad.paste(img_tga, (i * width, j * height, (i + 1) * width, (j + 1) * height))
+                    img_jpg_crop = img_jpg_pad.crop((width - pad, height - pad, 2 * width + pad, 2 * height + pad))
+                    img_jpg_crop.save(self.expanded_transfer + os.path.basename(jpg_path), quality=100)
+                    print(self.expanded_transfer + os.path.basename(jpg_path))
+                    img_tga_crop = img_tga_pad.crop((width - pad, height - pad, 2 * width + pad, 2 * height + pad))
+                    img_tga_crop.save(self.expanded_transfer + os.path.basename(tga_path), quality=100)
+                    print(self.expanded_transfer + os.path.basename(tga_path))
         def save_all(self):
             pad=256
             style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
             f = open(self.txt_path, "r", encoding='utf-8-sig')
             # f.readline()
-            gen_style_seamless_txt.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic)
+            gen_style_seamless_txt.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
             for file in f:
-                file = file.replace("\n", "")
-                file_real_path = self.work_ + '/' + file
-                file_name = os.path.basename(file_real_path)
-                parent_path = os.path.dirname(file_real_path)
-                self.style_transfer_path = parent_path + "/style_transfer/"
-                # parent_path+=is_seamless
-                if os.path.exists(self.style_transfer_path) is False:
-                    InfoNotifier.InfoNotifier.g_progress_info.append("请先将dds转化为jpg,tga格式")
-                    return
+                a = False
+                file = file.replace("\n", "").replace("\\", "/")
+                # 判断该图片是否在选中目录中
+                for sub_file in self.chosen_content_file_list:
+                    if self.dir_dict[sub_file] in file:
+                        a = True
+                        break
+                if a is True:
+                    file = file.replace("\n", "")
+                    file_real_path = self.work_ + '/' + file
+                    file_name = os.path.basename(file_real_path)
+                    parent_path = os.path.dirname(file_real_path)
+                    self.style_transfer_path = parent_path + "/style_transfer/"
+                    # parent_path+=is_seamless
+                    if os.path.exists(self.style_transfer_path) is False:
+                        InfoNotifier.InfoNotifier.g_progress_info.append("请先将dds转化为jpg,tga格式")
+                        return
 
-                parent_path+='/style_transfer/expanded'
-                self.expanded_transfer=parent_path+'/expanded_transfer/'
-                self.style_output = parent_path + '/style_output/'
-                self.lerp_output = parent_path + '/lerg_output/'
-                self.dds_output = parent_path + '/dds_output/'
-                self.seamless_output=parent_path+'/seamless/'
-                if os.path.exists(self.style_output) is False:
-                    os.makedirs(self.style_output)
-                if os.path.exists(self.lerp_output) is False:
-                    os.makedirs(self.lerp_output)
-                if os.path.exists(self.dds_output) is False:
-                    os.makedirs(self.dds_output)
-                if os.path.exists(self.expanded_transfer) is False:
-                    os.makedirs(self.expanded_transfer)
-                if os.path.exists(self.seamless_output) is False:
-                    os.makedirs(self.seamless_output)
+                    parent_path+='/style_transfer/expanded'
+                    self.expanded_transfer=parent_path+'/expanded_transfer/'
+                    self.style_output = parent_path + '/style_output/'
+                    self.lerp_output = parent_path + '/lerg_output/'
+                    self.dds_output = parent_path + '/dds_output/'
+                    self.seamless_output=parent_path+'/seamless/'
+                    if os.path.exists(self.style_output) is False:
+                        os.makedirs(self.style_output)
+                    if os.path.exists(self.lerp_output) is False:
+                        os.makedirs(self.lerp_output)
+                    if os.path.exists(self.dds_output) is False:
+                        os.makedirs(self.dds_output)
+                    if os.path.exists(self.expanded_transfer) is False:
+                        os.makedirs(self.expanded_transfer)
+                    if os.path.exists(self.seamless_output) is False:
+                        os.makedirs(self.seamless_output)
 
-                jpg_path = self.style_transfer_path + file_name.replace(".dds", ".jpg")
-                tga_path = self.style_transfer_path + file_name.replace(".dds", ".tga")
-                ##expand
-                # img_jpg=Image.open(jpg_path)
-                # img_tga=Image.open(tga_path)
-                # width = img_jpg.width
-                # height = img_jpg.height
-                # assert width == img_tga.width and height == img_tga.height
-                #
-                # img_jpg_pad = Image.new("RGB", (width * 3, height * 3))
-                # img_tga_pad = Image.new("RGBA", (width * 3, height * 3))
-                # for i in range(3):
-                #     for j in range(3):
-                #         img_jpg_pad.paste(img_jpg, (i * width, j * height, (i + 1) * width, (j + 1) * height))
-                #         img_tga_pad.paste(img_tga, (i * width, j * height, (i + 1) * width, (j + 1) * height))
-                # img_jpg_crop = img_jpg_pad.crop((width - pad, height - pad, 2 * width + pad, 2 * height + pad))
-                # img_jpg_crop.save(self.expanded_transfer+os.path.basename(jpg_path),quality=100)
-                # print(self.expanded_transfer+os.path.basename(jpg_path))
-                # img_tga_crop = img_tga_pad.crop((width - pad, height - pad, 2 * width + pad, 2 * height + pad))
-                # img_tga_crop.save(self.expanded_transfer+os.path.basename(tga_path),quality=100)
-                # print(self.expanded_transfer+os.path.basename(tga_path))
-                tmp_style_in=self.expanded_transfer+os.path.basename(jpg_path)
-                # style_out=self.style_output+style_name+'/'
-                # tmp_style_list=[tmp_style_in]
-                # style_main2(tmp_style_list,self.chosen_style_pic,self.style_output)
+                    jpg_path = self.style_transfer_path + file_name.replace(".dds", ".jpg")
+                    tga_path = self.style_transfer_path + file_name.replace(".dds", ".tga")
+                    ##expand
+                    # img_jpg=Image.open(jpg_path)
+                    # img_tga=Image.open(tga_path)
+                    # width = img_jpg.width
+                    # height = img_jpg.height
+                    # assert width == img_tga.width and height == img_tga.height
+                    #
+                    # img_jpg_pad = Image.new("RGB", (width * 3, height * 3))
+                    # img_tga_pad = Image.new("RGBA", (width * 3, height * 3))
+                    # for i in range(3):
+                    #     for j in range(3):
+                    #         img_jpg_pad.paste(img_jpg, (i * width, j * height, (i + 1) * width, (j + 1) * height))
+                    #         img_tga_pad.paste(img_tga, (i * width, j * height, (i + 1) * width, (j + 1) * height))
+                    # img_jpg_crop = img_jpg_pad.crop((width - pad, height - pad, 2 * width + pad, 2 * height + pad))
+                    # img_jpg_crop.save(self.expanded_transfer+os.path.basename(jpg_path),quality=100)
+                    # print(self.expanded_transfer+os.path.basename(jpg_path))
+                    # img_tga_crop = img_tga_pad.crop((width - pad, height - pad, 2 * width + pad, 2 * height + pad))
+                    # img_tga_crop.save(self.expanded_transfer+os.path.basename(tga_path),quality=100)
+                    # print(self.expanded_transfer+os.path.basename(tga_path))
+                    tmp_style_in=self.expanded_transfer+os.path.basename(jpg_path)
+                    # style_out=self.style_output+style_name+'/'
+                    # tmp_style_list=[tmp_style_in]
+                    # style_main2(tmp_style_list,self.chosen_style_pic,self.style_output)
 
-                #lerp
-                style_out_pic_path=self.style_output+style_name+'/'+file_name.replace(".dds",".jpg")
-                lerp_out_path=self.lerp_output+style_name+'/'+file_name.replace(".dds",".jpg")
-                if os.path.exists(self.lerp_output + style_name + '/') is False:
-                    os.makedirs(self.lerp_output + style_name + '/')
-                lerp_ret, _ = gen_lerp_ret.lerp_img(tmp_style_in, style_out_pic_path, self.lerg_value)
-                gen_lerp_ret.write_img(lerp_ret, lerp_out_path)
-                # combine alpha c
-                tga_img = Image.open(self.expanded_transfer+os.path.basename(tga_path))
-                jpg_img = Image.open(lerp_out_path)
-                ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
-                ir, ig, ib = jpg_img.split()
-                tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
-                lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
-                tga_img.save(lerp_out_path, quality=100)
-                print(f"generate tga image {lerp_out_path} after lerp op.")
-                #seamless
-                seamless_path=self.seamless_output+style_name+'/'
-                if os.path.exists(seamless_path) is False:
-                    os.makedirs(seamless_path)
-                img=Image.open(lerp_out_path)
-                width = img.width
-                height = img.height
-                pad = 256
-                img_crop = img.crop((pad, pad, width - pad, height - pad))
-                img_crop.save(seamless_path + os.path.basename(lerp_out_path), quality=100)
+                    #lerp
+                    style_out_pic_path=self.style_output+style_name+'/'+file_name.replace(".dds",".jpg")
+                    lerp_out_path=self.lerp_output+style_name+'/'+file_name.replace(".dds",".jpg")
+                    if os.path.exists(self.lerp_output + style_name + '/') is False:
+                        os.makedirs(self.lerp_output + style_name + '/')
+                    lerp_ret, _ = gen_lerp_ret.lerp_img(tmp_style_in, style_out_pic_path, self.lerg_value)
+                    gen_lerp_ret.write_img(lerp_ret, lerp_out_path)
+                    # combine alpha c
+                    tga_img = Image.open(self.expanded_transfer+os.path.basename(tga_path))
+                    jpg_img = Image.open(lerp_out_path)
+                    ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
+                    ir, ig, ib = jpg_img.split()
+                    tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
+                    lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
+                    tga_img.save(lerp_out_path, quality=100)
+                    print(f"generate tga image {lerp_out_path} after lerp op.")
+                    #seamless
+                    seamless_path=self.seamless_output+style_name+'/'
+                    if os.path.exists(seamless_path) is False:
+                        os.makedirs(seamless_path)
+                    img=Image.open(lerp_out_path)
+                    width = img.width
+                    height = img.height
+                    pad = 256
+                    img_crop = img.crop((pad, pad, width - pad, height - pad))
+                    img_crop.save(seamless_path + os.path.basename(lerp_out_path), quality=100)
 
-                dds_output=self.dds_output+style_name+'/'
-                if os.path.exists(dds_output) is False:
-                    os.makedirs(dds_output)
-                main_cmd=f"{self.texconv_path} -dxt5 -file {seamless_path + os.path.basename(lerp_out_path)} -outdir {dds_output}"
-                main_cmd.replace("\n","")
-                os.system(main_cmd)
+                    dds_output=self.dds_output+style_name+'/'
+                    if os.path.exists(dds_output) is False:
+                        os.makedirs(dds_output)
+                    main_cmd=f"{self.texconv_path} -dxt5 -file {seamless_path + os.path.basename(lerp_out_path)} -outdir {dds_output}"
+                    main_cmd.replace("\n","")
+                    os.system(main_cmd)
             InfoNotifier.InfoNotifier.g_progress_info.append("dds图片已转化完毕，保存在工程文件dds_output中")
             self._signal.emit()
         def run(self):
@@ -1684,10 +1712,10 @@ if __name__=='__main__':
                                 self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}']=parent_path
                         if file_split[-1] == 'procedural' and file_split[-2] == 'landscape':
                             self.pics_path_array.append(file_path)
-                            if f'./{file_split[-2]}/{file_split[-1]}' not in self.map_dir_omit:
-                                self.map_dir_omit.append(f'./{file_split[-2]}/{file_split[-1]}')
+                            if f'./{file_split[-3]}/{file_split[-2]}/{file_split[-1]}' not in self.map_dir_omit:
+                                self.map_dir_omit.append(f'./{file_split[-3]}/{file_split[-2]}/{file_split[-1]}')
                                 # self.map_full_dir.append(parent_path)
-                                self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}']=parent_path
+                                self.dir_dict[f'./{file_split[-3]}/{file_split[-2]}/{file_split[-1]}']=parent_path
                     # if file_split[-1]
                     if parent_path not in temp:
                         continue
@@ -2020,13 +2048,16 @@ if __name__=='__main__':
                 lerp_value=self.ui.change_coe_horizontalSlider2.value()
                 seamless=self.is_seamless_ornot2()
                 chosen_style_pic=self.chosen_style_pic2
+                #被勾选的目录列表
+                chosen_content_file_list=self.combocheckBox1.Selectlist()
+
                 if seamless is False:
                     self.mythread3=My_gen_style_thread2()
-                    self.mythread3.set_para(txt_file,work_,lerp_value,chosen_style_pic)
+                    self.mythread3.set_para(txt_file,work_,lerp_value,chosen_style_pic,chosen_content_file_list,self.dir_dict)
                     self.mythread3.start()
                 else:
                     self.mythread3=My_gen_seamless_thread2()
-                    self.mythread3.set_para(txt_file,work_,lerp_value,chosen_style_pic)
+                    self.mythread3.set_para(txt_file,work_,lerp_value,chosen_style_pic,chosen_content_file_list,self.dir_dict)
                     self.mythread3.start()
 
                 # set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic=''):
