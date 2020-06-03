@@ -1,0 +1,14 @@
+{
+    "data/source/combitextures":"./combitextures",
+    "data/source/maps_source/background/texture":"./background/texture",
+    "data/source/maps_source/foliage/texture":"./foliage/texture",
+    "data/source/maps_source/texture":"./maps_source/texture",
+    "data/source/maps_source/texture/skytexture":"./texture/skytexture",
+    "data/source/maps_source/texture/terraintexture/cliff":"./terraintexture/cliff",
+    "data/source/maps_source/texture/terraintexture/grass":"./terraintexture/grass",
+    "data/source/maps_source/texture/terraintexture/moss":"./terraintexture/moss",
+    "data/source/maps_source/texture/terraintexture/noise":"./terraintexture/noise",
+    "data/source/maps_source/texture/terraintexture/soil":"./terraintexture/soil",
+    "data/source/maps_source/texture/terraintexture/stone":"./terraintexture/stone",
+    "data/source/texture":"./texture"
+}

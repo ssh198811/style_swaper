@@ -171,16 +171,17 @@ class Ui_MainWindow(object):
         self.gen_jpg_tga_button2.setStyleSheet("background-color: rgb(90, 90, 90);\n"
 "color: rgb(212, 212, 212);")
         self.gen_jpg_tga_button2.setObjectName("gen_jpg_tga_button2")
-        self.preview_before_button2 = QtWidgets.QPushButton(self.txt)
-        self.preview_before_button2.setGeometry(QtCore.QRect(270, 480, 75, 23))
-        self.preview_before_button2.setStyleSheet("background-color: rgb(90, 90, 90);\n"
-"color: rgb(212, 212, 212);")
-        self.preview_before_button2.setObjectName("preview_before_button2")
         self.picpath_bef_comboBox = QtWidgets.QComboBox(self.txt)
         self.picpath_bef_comboBox.setGeometry(QtCore.QRect(30, 160, 321, 41))
         self.picpath_bef_comboBox.setStyleSheet("background-color: rgb(90, 90, 90);\n"
 "color: rgb(212, 212, 212);")
+        self.picpath_bef_comboBox.setModelColumn(0)
         self.picpath_bef_comboBox.setObjectName("picpath_bef_comboBox")
+        self.preview_content2 = QtWidgets.QPushButton(self.txt)
+        self.preview_content2.setGeometry(QtCore.QRect(270, 480, 75, 23))
+        self.preview_content2.setStyleSheet("background-color: rgb(90, 90, 90);\n"
+"color: rgb(212, 212, 212);")
+        self.preview_content2.setObjectName("preview_content2")
         self.SpecPic.addTab(self.txt, "TXT路径导入")
         self.t1 = QtWidgets.QWidget()
         self.t1.setAccessibleName("")
@@ -531,7 +532,7 @@ class Ui_MainWindow(object):
         self.is_seamless_ornot_comboBox2.setItemText(1, _translate("MainWindow", "是"))
         self.choose_pic_style_button2.setText(_translate("MainWindow", "导入风格图片"))
         self.gen_jpg_tga_button2.setText(_translate("MainWindow", "生成图片"))
-        self.preview_before_button2.setText(_translate("MainWindow", "预览"))
+        self.preview_content2.setText(_translate("MainWindow", "预览"))
         self.choose_pic_multi_file_dir_button1.setText(_translate("MainWindow", "选择待转换图片目录"))
         self.Pic_before_text1.setText(_translate("MainWindow", "原图"))
         self.savePic_button1.setText(_translate("MainWindow", "保存图片"))

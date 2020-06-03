@@ -7,16 +7,19 @@ file_path = "稻香村.txt"
 # 设置第三方导出工具路径
 exe_dir = os.getcwd() + "\\dds_to_jpg/dds_to_jpg.exe"
 
-
-def gen_jpg_tga(file_='', work_=""):
+import InfoNotifier
+def gen_jpg_tga(file_='', work_="",dds_list=[]):
     try:
 
-        f = open(file_, "r", encoding='utf-8')
+        # f = open(file_, "r", encoding='utf-8-sig')
         # f.readline()
 
-        for file in f:
+        for file in dds_list:
             file=file.replace("\n","")
             file_real_path = work_ + file
+            if os.path.exists(file_real_path) is False:
+                InfoNotifier.InfoNotifier.g_progress_info.append(f"{file_real_path} doesn't exist")
+                continue
 
             file_name = os.path.basename(file_real_path)
 

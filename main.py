@@ -1,8 +1,9 @@
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets,QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMenu, QMessageBox , QListWidgetItem
-from PyQt5.QtCore import pyqtSignal, QThread, Qt, QUrl, QPoint,QSize
+from PyQt5.QtCore import pyqtSignal, QThread, Qt, QUrl, QPoint,QSize,QRect
 from PyQt5 import QtGui
+from combocheckbox import ComboCheckBox
 from PyQt5.QtGui import QIcon, QDesktopServices,QPixmap
 import  Ui_test519
 import  glob
@@ -19,6 +20,7 @@ from gen_style_file2 import style_main2
 from gen_style_file3 import  style_main3
 import gen_style_all
 import  gen_jpg_tga_from_dds
+import json
 import gen_lerp_ret
 import gen_style_seamless_txt
 from  gen_style_txt import style_txt_main2
@@ -100,6 +102,8 @@ if __name__=='__main__':
                 InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
             # main(pics_dir=[], style_dir='', save_dir='')
             self._signal_trigger.emit()
+
+
         def run(self):
             self.preview_lerg_pics()
     class My_gen_seamless_style_thread(QThread):
@@ -619,13 +623,13 @@ if __name__=='__main__':
         _signal=pyqtSignal()
         def __init__(self):
             super(My_gen_dds_jpg_thread2, self).__init__()
-        def set_para(self,file_='',work_='',base_project=''):
+        def set_para(self,file_='',work_='',dds_list=[]):
             self.file_=file_
             self.work_=work_
-            self.base_project=base_project
+            self.dds_list=dds_list
         def gen_jpg_tga(self):
-            gen_jpg_tga_from_dds.gen_jpg_tga(self.file_,self.work_)
-            InfoNotifier.InfoNotifier.g_progress_info.append("已生成jpg,tga格式图片")
+            gen_jpg_tga_from_dds.gen_jpg_tga(self.file_,self.work_,self.dds_list)
+            InfoNotifier.InfoNotifier.g_progress_info.append("已生成jpg,tga格式图片，点击下拉框选择目录进行预览")
             self._signal.emit()
         def run(self):
             self.gen_jpg_tga()
@@ -637,26 +641,29 @@ if __name__=='__main__':
         def set_para(self,show_list=[],chosen_style_pic='',temp_file=''):
             self.show_list=show_list
             self.chosen_style_pic=chosen_style_pic
+            #根目录
             self.temp_file_name=temp_file
         def gen_style(self):
             style_pic=self.chosen_style_pic
             content_list = self.show_list
-            if os.path.exists(self.temp_file_name) is False:
-                os.makedirs(self.temp_file_name)
+            # if os.path.exists(self.temp_file_name) is False:
+            #     os.makedirs(self.temp_file_name)
                 # index=0
                 # for i in content_list:
                 #     save_temp_dir=self.temp_file_name+str(index)+'.jpg'
-            style_name = os.path.basename(style_pic).split('.')[0]
-            if os.path.exists(self.temp_file_name + style_name + '/') is False:
-                style_main2(content_list, style_pic, self.temp_file_name)
-                InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
-            else:
-                for file_path in content_list:
-                    file = os.path.basename(file_path)
-                    # style_path=
-                    InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(
-                        f'{self.temp_file_name}{style_name}/' + file)
-                InfoNotifier.InfoNotifier.g_progress_info.append(self.temp_file_name + style_name + '已存在，点击一张原图进行预览')
+            # style_name = os.path.basename(style_pic).split('.')[0]
+            style_main2(content_list, style_pic, self.temp_file_name)
+            InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览")
+            # if os.path.exists(self.temp_file_name + style_name + '/') is False:
+            #     style_main2(content_list, style_pic, self.temp_file_name)
+            #     InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
+            # else:
+            #     for file_path in content_list:
+            #         file = os.path.basename(file_path)
+            #         # style_path=
+            #         InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(
+            #             f'{self.temp_file_name}{style_name}/' + file)
+            #     InfoNotifier.InfoNotifier.g_progress_info.append(self.temp_file_name + style_name + '已存在，点击一张原图进行预览')
             # main(pics_dir=[], style_dir='', save_dir='')
             self._signal.emit()
 
@@ -683,7 +690,7 @@ if __name__=='__main__':
             # elif self.seamless is True:
             #     is_seamless='/expanded'
             style_name=os.path.basename(self.chosen_style_pic).split('.')[0]
-            f=open(self.txt_path,"r",encoding='utf-8')
+            f=open(self.txt_path,"r",encoding='utf-8-sig')
             # f.readline()
 
 
@@ -717,6 +724,11 @@ if __name__=='__main__':
                 lerp_out_path=self.lerp_output+style_name+'/'+file_name.replace(".dds",".jpg")
                 if os.path.exists(self.lerp_output+style_name+'/') is False:
                     os.makedirs(self.lerp_output+style_name+'/')
+
+                if os.path.exists(jpg_path) is False:
+                    print(jpg_path + " is not exist!")
+                    continue
+
                 lerp_ret,_=gen_lerp_ret.lerp_img(jpg_path,style_out_pic_path,self.lerg_value)
                 gen_lerp_ret.write_img(lerp_ret,lerp_out_path)
                 #combine alpha c
@@ -751,7 +763,7 @@ if __name__=='__main__':
         def expanded(self):
             pad = 256
             style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
-            f = open(self.txt_path, "r", encoding='utf-8')
+            f = open(self.txt_path, "r", encoding='utf-8-sig')
             # f.readline()
 
             for file in f:
@@ -806,7 +818,7 @@ if __name__=='__main__':
         def save_all(self):
             pad=256
             style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
-            f = open(self.txt_path, "r", encoding='utf-8')
+            f = open(self.txt_path, "r", encoding='utf-8-sig')
             # f.readline()
             gen_style_seamless_txt.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic)
             for file in f:
@@ -1210,12 +1222,33 @@ if __name__=='__main__':
             super(MainWindow, self).__init__()
             self.ui=Ui_test519.Ui_MainWindow()
             self.ui.setupUi(self)
+            #实例化下拉复选框类
+            self.combocheckBox1 = ComboCheckBox(self.ui.txt)
+            self.combocheckBox1.setGeometry(QtCore.QRect(30, 160, 321, 41))
+            self.combocheckBox1.setMinimumSize(QtCore.QSize(100, 20))
+            self.combocheckBox1.setStyleSheet("background-color: rgb(90, 90, 90);\n"
+                                    "color: rgb(0, 0, 0);")
+            # items = ["\\terraintexture\grass", "\稻香村\\baked\\", "\maps_source\\texture\\"]
+            # self.comboBox1.loadItems(items)
+            self.combocheckBox1.setEnabled(False)
+
+
             self.preview_num=3
             # self.ui.pic_before_listWidget1.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
             # self.ui.pic_before_listWidget1.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
             # self.threads=Mythread()
             # self.threads._signal_progress_info.connect()
+            try:
+                with open("./base_dir_log.txt",'r') as f:
+                    lines=f.readlines()
+                    last_line=lines[-1].replace("\n","")
+                    self.ui.project_base_dir.setText(last_line)
+
+
+
+            except:
+                pass
             self.Thread=Mythread()
             self.Thread._signal_progress_info.connect(self.update_progress_info)
             self.Thread.start()
@@ -1234,7 +1267,10 @@ if __name__=='__main__':
             self.Choosed_style_pics_list2=[]
             self.Choosed_style_pics_list3=[]
             self.chosen_style_pic3=''
+            self.chosen_style_pic2=''
             self.chosen_content_list3=[]
+
+
             # 设置第三方导出工具路径
             self.exe_dir = os.getcwd() + "\\dds_to_jpg/dds_to_jpg.exe"
             self.ui.make_project_dir_button.clicked.connect(self.Make_Project_dir)
@@ -1252,7 +1288,10 @@ if __name__=='__main__':
             # self.ui.choose_before_pic_base.clicked.connect(self.choose_before_pic_base_dir)
             self.ui.choose_pic_txt_button2.clicked.connect(self.open_txt)
             self.ui.gen_jpg_tga_button2.clicked.connect(self.gen_jpg_tga2)
-            self.ui.preview_before_button2.clicked.connect(self.show_previewed_before_pic2)
+
+            # self.ui.preview_before_button2.clicked.connect(self.show_previewed_before_pic2)
+            self.ui.preview_content2.clicked.connect(self.show_previewed_before_pic2)
+
             self.ui.choose_pic_style_button2.clicked.connect(self.Choose_style_pics2)
             self.ui.pic_style_listWidget2.clicked.connect(self.pic_style_clicked2)
             self.ui.savePic_button2.clicked.connect(self.save_style2)
@@ -1265,6 +1304,9 @@ if __name__=='__main__':
             self.ui.pic_style_listWidget3.clicked.connect(self.pic_style_clicked3)
             self.ui.change_coe_horizontalSlider3.valueChanged.connect(self.preview_after_pic_in_label3)
             self.ui.savePic_button3.clicked.connect(self.save_all3)
+
+            # self.ui.picpath_bef_comboBox.highlighted[int].connect(self.highlighted_text)
+
         def update_progress_info(self):
             for info in InfoNotifier.InfoNotifier.g_progress_info:
                 self.ui.progress_Info.append(info)
@@ -1281,6 +1323,9 @@ if __name__=='__main__':
                 return
 
             self.ui.project_base_dir.setText(directory)
+            #
+            with open('./base_dir_log.txt','w')as f:
+                f.write(f"{directory}\n")
         def Choose_multi_dir_tab1(self):
             self.project_base = self.ui.project_base_dir.text()
 
@@ -1559,15 +1604,17 @@ if __name__=='__main__':
             # def  save_lerp(self):
             except BaseException as be:
                 print(be)
-        ####################################################################################
-        # ###############                 tab2         ######################################
-        ######################################################################################
-        # def choose_before_pic_base_dir(self):
-        #     directory = QtWidgets.QFileDialog.getExistingDirectory(self, "选择文件夹", "./")
-        #     if len(directory) == 0:
-        #         return
-        #     self.project_base = directory
-            # self.ui.before_pic_base_lineedit.setText(directory)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1580,78 +1627,233 @@ if __name__=='__main__':
                 return
             else:
                 self.txt_path=file
-                InfoNotifier.InfoNotifier.g_progress_info.append(f"选择txt文件：{file}")
+                # self.parent_dir_txt=[]
+                InfoNotifier.InfoNotifier.g_progress_info.append(f"选择txt文件：{file}，点击生成图片进行格式转换，如已转换过，直接点击下拉框选择目录进行预览")
+                if self.ui.project_base_dir=='':
+                    InfoNotifier.InfoNotifier.g_progress_info.append("请选择根目录")
+                    return
+                # self.parent_dir_txt.clear()
+                # self.show_dirs_in_combobox2()
+                self.dirs_filter()
+        def dirs_filter(self):
+            # fw=open(self.txt_path,"r",encoding="utf-8-sig")
+            #
+            # self.checkcombobox_dir_array=[]
+            # with open(".\data.json", 'r') as f:
+            #     temp = json.loads(f.read())
+            #     for file_path in fw:
+            #         file_path=file_path.replace("\n","")
+            #         parent_path=os.path.dirname(file_path)
+            #         try:
+            #             tmp=temp[parent_path]
+            #             self.checkcombobox_dir_array.append(parent_path)
+            #         except:
+            #             pass
+            #         parent_path.split("\\")
+            #         if
+            with open(".\data.json", 'r') as f:
+                # print(f)
+                import os
+                #以下三个表都是相对路径
+                #预览路径
+                self.map_dir_omit = []
+
+                # self.map_full_dir=[]
+                #checkcombobox预览的路径和真实路径的映射表
+                self.dir_dict={}
+                self.pics_path_array=[]
+                temp = json.loads(f.read())
+                fw = open(self.txt_path, "r", encoding="utf-8-sig")
+                for file in fw:
+                    file_path = file.replace("\n", "").replace("\\", "/")
+                    parent_path = os.path.dirname(file_path)
+                    # print(parent_path)
+                    file_split = parent_path.split("/")
+                    if len(file_split) >= 3:
+                        if file_split[-1] == 'baked' and file_split[-3] == 'maps':
+                            self.pics_path_array.append(file_path)
+                            if f'./{file_split[-2]}/{file_split[-1]}' not in self.map_dir_omit:
+                                self.map_dir_omit.append(f'./{file_split[-2]}/{file_split[-1]}')
+                                # self.map_full_dir.append(parent_path)
+                                self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}']=parent_path
+                        if file_split[-1] == 'env_probe' and file_split[-3] == 'maps':
+                            self.pics_path_array.append(file_path)
+                            if f'./{file_split[-2]}/{file_split[-1]}' not in self.map_dir_omit:
+                                self.map_dir_omit.append(f'./{file_split[-2]}/{file_split[-1]}')
+                                # self.map_full_dir.append(parent_path)
+                                self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}']=parent_path
+                        if file_split[-1] == 'procedural' and file_split[-2] == 'landscape':
+                            self.pics_path_array.append(file_path)
+                            if f'./{file_split[-2]}/{file_split[-1]}' not in self.map_dir_omit:
+                                self.map_dir_omit.append(f'./{file_split[-2]}/{file_split[-1]}')
+                                # self.map_full_dir.append(parent_path)
+                                self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}']=parent_path
+                    # if file_split[-1]
+                    if parent_path not in temp:
+                        continue
+                    self.pics_path_array.append(file_path)
+                    if temp[parent_path] not in self.map_dir_omit:
+                        self.map_dir_omit.append(temp[parent_path])
+                        # self.map_full_dir.append(parent_path)
+                        self.dir_dict[temp[parent_path]]=parent_path
+
+                self.combocheckBox1.loadItems(self.map_dir_omit)
+                self.combocheckBox1.setEnabled(True)
+                print(self.map_dir_omit)
+                # print(self.map_full_dir)
+                print(self.dir_dict)
+                print(self.pics_path_array)
+
+
+
         def gen_jpg_tga2(self):
             try:
                 file=self.txt_path
                 work_=self.ui.project_base_dir.text()+'/'
                 work_=work_.replace("/","\\")
+                #带转换的图片列表
+                dds_list=self.pics_path_array
+                # print(self.combocheckBox1.Selectlist())
+                # SelectList=self.combocheckBox1.Selectlist()
+
                 self.my_dds_thread=My_gen_dds_jpg_thread2()
-                self.my_dds_thread.set_para(file,work_)
+                self.my_dds_thread.set_para(file,work_,dds_list)
                 self.my_dds_thread.start()
                 # time.sleep(1)
             except:
                 InfoNotifier.InfoNotifier.g_progress_info.append("请先选择txt文件")
+        """
+        v1.0
+        def show_dirs_in_combobox2(self):
+            # work_=self.ui.project_base_dir.text()
+            self.ui.picpath_bef_comboBox.clear()
+            txt=self.txt_path
+            f = open(txt, "r", encoding='utf-8-sig')
+            self.parent_dir_txt = []
+            for file_path in f:
+                file_path = file_path.replace("\n", "")
+                # file_name = os.path.basename(file_path)
+                file_path =  file_path
+                parent_path=os.path.dirname(file_path)
+
+                if parent_path not in self.parent_dir_txt:
+                    self.ui.picpath_bef_comboBox.addItem('./'+parent_path)
+                    # self.ui.picpath_bef_comboBox.AdjustTo
+                    self.parent_dir_txt.append(parent_path)
+            print(self.parent_dir_txt)
+"""
         # def file_len(self,fname):
         #     with open(fname) as f:
         #         for i, l in enumerate(f):
         #             pass
         #     return i + 1
-        def show_previewed_before_pic2(self):
+        def show_previewed_before_pic2(self,i):
             try:
                 self.ui.pic_before_listWidget2.clear()
+                self.ui.pic_before_label2.clear()
                 InfoNotifier.InfoNotifier.style_preview_pic_dir2.clear()
                 style_img_icon = []
-                dirs = self.txt_path
-                work_=self.ui.project_base_dir.text()+'/'
-                f=open(dirs,"r",encoding='utf-8')
-                # length=3
-                # f.readline()
-                idx=0
-                cnt=3
+                # dirs=self.parent_dir_txt[i]
+                self.chosen_file_list=self.combocheckBox1.Selectlist()
+                print(self.chosen_file_list)
+                preview_list=[]
+                for dire in self.chosen_file_list:
+                    fw = open(self.txt_path, "r", encoding="utf-8-sig")
+                    for f in fw:
+                        f=f.replace("\n","").replace("\\","/")
+                        path=self.dir_dict[dire]
+                        if self.dir_dict[dire] in f:
+                            preview_list.append(f)
+                            break
 
-                self.tmp_list = []
-                for file in f:
-                    file=file.replace("\n","")
-                    if idx<cnt:
-                        idx += 1
-                        file_real_path=work_+file
-                        file_name=os.path.basename(file_real_path)
-                        parent_path=os.path.dirname(file_real_path)
-                        style_transfer_path=parent_path+"/style_transfer/"
-                        ipg_path=style_transfer_path+file_name.replace(".dds", ".jpg")
-                        if os.path.exists(ipg_path) is False:
-                            continue
-                        self.tmp_list.append(ipg_path.replace("\n",""))
+                for i in range(len(preview_list)):
+                    dir=preview_list[i].replace(".dds",".jpg")
+                    dir=f'{self.ui.project_base_dir.text()}/{dir}'
+                    parent=os.path.dirname(dir)
+                    file_name=os.path.basename(dir)
+                    dir=f'{parent}/style_transfer/{file_name}'
+                    preview_list[i]=dir
+                print(preview_list)
 
-                if len(self.tmp_list)==0:
+                # dirs = self.txt_path
+                # work_=self.ui.project_base_dir.text()+'/'
+                # real_parent_path=f'{work_}{dirs}'
+                # preview_list=glob.glob(f'{real_parent_path}/style_transfer/*.jpg')
+                # if len(preview_list)>self.preview_num:
+                #     preview_list=preview_list[:self.preview_num]
+                self.tmp_list=preview_list
+                print(self.tmp_list)
+                if len(self.tmp_list) == 0:
                     InfoNotifier.InfoNotifier.g_progress_info.append("不存在对应jpg格式图片，请先转换格式")
                     return
                 for pic in self.tmp_list:
-                    print(pic)
-                    pix = QPixmap(pic)
-                    icon = QIcon()
+                    pix=QPixmap(pic)
+                    icon=QIcon()
                     icon.addPixmap(pix)
                     style_img_icon.append(icon)
-            except BaseException as e:
-                print(e)
-
-
-
-            index=0
-            while index<cnt:
-                try:
+                index=0
+                while index<len(self.tmp_list):
                     item=QListWidgetItem()
                     item.setIcon(style_img_icon[index])
                     item.setSizeHint(QSize(100, 100))
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     self.ui.pic_before_listWidget2.addItem(item)
-                    index+=1
-                except BaseException as be:
-                    print(be)
-            iconsize=QSize(100,100)
-            self.ui.pic_before_listWidget2.setIconSize(iconsize)
-            QApplication.processEvents()
+                    index += 1
+                iconsize=QSize(100,100)
+                self.ui.pic_before_listWidget2.setIconSize(iconsize)
+                InfoNotifier.InfoNotifier.g_progress_info.append("点击一张风格图片以进行预览")
+
+
+                # f=open(dirs, "r", encoding='utf-8-sig')
+                # # length=3
+                # # f.readline()
+                # idx=0
+                # cnt=3
+                #
+                # self.tmp_list = []
+                # for file in f:
+                #     file=file.replace("\n","")
+                #     if idx<cnt:
+                #         idx += 1
+                #         file_real_path=work_+file
+                #         file_name=os.path.basename(file_real_path)
+                #         parent_path=os.path.dirname(file_real_path)
+                #         style_transfer_path=parent_path+"/style_transfer/"
+                #         ipg_path=style_transfer_path+file_name.replace(".dds", ".jpg")
+                #         if os.path.exists(ipg_path) is False:
+                #             continue
+                #         self.tmp_list.append(ipg_path.replace("\n",""))
+                #
+                # if len(self.tmp_list)==0:
+                #     InfoNotifier.InfoNotifier.g_progress_info.append("不存在对应jpg格式图片，请先转换格式")
+                #     return
+                # for pic in self.tmp_list:
+                #     print(pic)
+                #     pix = QPixmap(pic)
+                #     icon = QIcon()
+                #     icon.addPixmap(pix)
+                #     style_img_icon.append(icon)
+            # except BaseException as e:
+            #     print(e)
+            #
+            #
+            #
+            # index=0
+            # while index<cnt:
+            #     try:
+            #         item=QListWidgetItem()
+            #         item.setIcon(style_img_icon[index])
+            #         item.setSizeHint(QSize(100, 100))
+            #         item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+            #         self.ui.pic_before_listWidget2.addItem(item)
+            #         index+=1
+            #     except BaseException as be:
+            #         print(be)
+            # iconsize=QSize(100,100)
+            # self.ui.pic_before_listWidget2.setIconSize(iconsize)
+                QApplication.processEvents()
+            except BaseException as e:
+                print(e)
         def previewed_before_clicked(self):
             # pre_list=self.tmp_list
             pic_index=self.ui.pic_before_listWidget2.currentIndex().row()
@@ -1728,10 +1930,11 @@ if __name__=='__main__':
                 if len(self.Choosed_style_pics_list2) == 0:
                     return
                 pic_style_index = self.ui.pic_style_listWidget2.currentIndex().row()
+                self.chosen_style_pic2=self.Choosed_style_pics_list2[pic_style_index]
                 self.show_style_pic_in_label2(pic_style_index)
                 self.make_temp_previewed()
-            except:
-                pass
+            except BaseException as e:
+                print(e)
 
             # self.preview_lerg_pics()
             # InfoNotifier.InfoNotifier.g_progress_info.append("准备生成风格迁移后的预览图...")
@@ -1746,19 +1949,26 @@ if __name__=='__main__':
         def make_temp_previewed(self):
             try:
                 InfoNotifier.InfoNotifier.g_progress_info.append("等待生成预览图")
-                base=self.ui.project_base_dir.text()
-                tem_file=base+'/temp/'
-                preview_file_list=self.tmp_list
-                if len(preview_file_list)==0:
+                base = self.ui.project_base_dir.text()
+                preview_file_list = self.tmp_list
+                #self.tmp_list:f'{parent}/style_transfer/{file_name}'
+
+                # tem_file = f'{os.path.dirname(os.path.dirname(preview_file_list[0]))}/style_transfer/temp/'
+                # print(tem_file)
+                # if os.path.exists(tem_file) is False:
+                #     os.makedirs(tem_file)
+
+                if len(preview_file_list) == 0:
                     return
-                mythread=My_gen_style_temp_thread2()
-                mythread.set_para(preview_file_list,self.chosen_style_pic2,tem_file)
-                mythread.start()
+                self.mythread_temp=My_gen_style_temp_thread2()
+                self.mythread_temp.set_para(preview_file_list, self.chosen_style_pic2, self.ui.project_base_dir.text())
+                self.mythread_temp.start()
             except BaseException as be:
                 print(be)
                 InfoNotifier.InfoNotifier.g_progress_info.append("先加入原图")
             # InfoNotifier.InfoNotifier.g_progress_info.append("预览图生成完成，点击")
-        def show_style_pic_in_label2(self,i):
+        def show_style_pic_in_label2(self,i=0):
+
             # print(i)
             show_list=self.Choosed_style_pics_list2
             dir=show_list[i]
@@ -1775,23 +1985,27 @@ if __name__=='__main__':
 
                 content_index = self.ui.pic_before_listWidget2.currentIndex().row()
                 content_pic = self.tmp_list[content_index]
+                if self.chosen_style_pic2 != '':
+                    s_name=os.path.basename(self.chosen_style_pic2).split('.')[0]
 
-                after_pic_dir = InfoNotifier.InfoNotifier.style_preview_pic_dir2[content_index]
+                    after_pic_dir=os.path.dirname(content_pic)+'/temp/'+s_name+'/'+os.path.basename(content_pic)
 
-                self.save_path1 = self.ui.project_base_dir.text() + '/temp/lerp.jpg'
+                # after_pic_dir = InfoNotifier.InfoNotifier.style_preview_pic_dir2[content_index]
+
+                save_path2 = os.path.dirname(content_pic) + '/temp/lerp.jpg'
                 self.value_slider = self.ui.change_coe_horizontalSlider2.value()
                 img, _ = gen_lerp_ret.lerp_img(content_pic, after_pic_dir, float(self.value_slider))
-
-                cv2.imwrite(self.save_path1, img)
+                # cv2.imwrite(save_path2, img)
+                gen_lerp_ret.write_img(img,save_path2)
                 self.ui.pic_after_label2.clear()
                 item = QListWidgetItem()
-                item.setIcon(QIcon(self.save_path1))
+                item.setIcon(QIcon(save_path2))
                 item.setSizeHint(QSize(291, 271))
                 self.ui.pic_after_label2.setIconSize(QSize(291, 271))
                 self.ui.pic_after_label2.addItem(item)
 
             except BaseException as e:
-                print(e)
+                print('preview_style_pic_in_label2',e)
                 InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图或等待生成预览图片")
         def is_seamless_ornot2(self):
             if self.ui.is_seamless_ornot_comboBox2.currentText() == "否":
@@ -1807,17 +2021,23 @@ if __name__=='__main__':
                 seamless=self.is_seamless_ornot2()
                 chosen_style_pic=self.chosen_style_pic2
                 if seamless is False:
-                    mythread=My_gen_style_thread2()
-                    mythread.set_para(txt_file,work_,lerp_value,chosen_style_pic)
-                    mythread.start()
+                    self.mythread3=My_gen_style_thread2()
+                    self.mythread3.set_para(txt_file,work_,lerp_value,chosen_style_pic)
+                    self.mythread3.start()
                 else:
-                    mythread=My_gen_seamless_thread2()
-                    mythread.set_para(txt_file,work_,lerp_value,chosen_style_pic)
-                    mythread.start()
+                    self.mythread3=My_gen_seamless_thread2()
+                    self.mythread3.set_para(txt_file,work_,lerp_value,chosen_style_pic)
+                    self.mythread3.start()
 
                 # set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic=''):
             except BaseException as b:
                 print(b)
+
+
+
+
+
+
 
 
 
@@ -1837,9 +2057,9 @@ if __name__=='__main__':
             InfoNotifier.InfoNotifier.g_progress_info.append(f"已选中{len(self.chosen_content_list3)}张图片")
         def gen_jpg_tga3(self):
             self.base=self.ui.project_base_dir.text()
-            mythread=My_gen_dds_jpg_thread3()
-            mythread.set_para(self.chosen_content_list3)
-            mythread.start()
+            self.mythread_gen=My_gen_dds_jpg_thread3()
+            self.mythread_gen.set_para(self.chosen_content_list3)
+            self.mythread_gen.start()
             # self.ui.choose_pics_button3.setEnabled(False)
         def preview_before_inWidget3(self):
             self.ui.pic_before_listWidget3.clear()
@@ -1983,9 +2203,9 @@ if __name__=='__main__':
                     parent_tmp=os.path.dirname(tmp_file)
                     tem_file = parent_tmp+ '/temp/'
                     self.tem_file=tem_file
-                    mythread = My_gen_style_temp_thread3()
-                    mythread.set_para(preview_file_list, self.chosen_style_pic3, tem_file)
-                    mythread.start()
+                    self.mythread_temp3 = My_gen_style_temp_thread3()
+                    self.mythread_temp3.set_para(preview_file_list, self.chosen_style_pic3, tem_file)
+                    self.mythread_temp3.start()
             except BaseException as be:
                 print(be)
                 InfoNotifier.InfoNotifier.g_progress_info.append("先加入原图")
@@ -2012,7 +2232,7 @@ if __name__=='__main__':
 
             except BaseException as e:
                 print(e)
-                InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图或等待生成预览图片")
+                InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图片，再等待生成预览图片")
         def is_seamless_ornot3(self):
             if self.ui.is_seamless_ornot_comboBox3.currentText()=="否":
                 return False
@@ -2023,17 +2243,24 @@ if __name__=='__main__':
             lerp_value=self.ui.change_coe_horizontalSlider3.value()
             seamless=self.is_seamless_ornot3()
             if seamless is False:
-                mythread=My_gen_style_thread3()
-                mythread.set_para(content_list,style_path,lerp_value)
-                mythread.start()
+                self.mythread_save3=My_gen_style_thread3()
+                self.mythread_save3.set_para(content_list,style_path,lerp_value)
+                self.mythread_save3.start()
             else:
-                mythread=My_gen_seamless_style_thread3()
-                mythread.set_para(content_list,style_path,lerp_value)
-                mythread.start()
+                self.mythread_save3=My_gen_seamless_style_thread3()
+                self.mythread_save3.set_para(content_list,style_path,lerp_value)
+                self.mythread_save3.start()
 
 
     import  sys
     app=QApplication(sys.argv)
     window=MainWindow()
+#     comboBox1 = ComboCheckBox(window.ui.txt)
+#     comboBox1.setGeometry(QtCore.QRect(30, 160, 321, 41))
+#     comboBox1.setMinimumSize(QtCore.QSize(100, 20))
+#     comboBox1.setStyleSheet("background-color: rgb(90, 90, 90);\n"
+# "color: rgb(212, 212, 212);")
+#     items = ["\\terraintexture\grass", "\稻香村\\baked\\", "\maps_source\\texture\\"]
+#     comboBox1.loadItems(items)
     window.show()
     sys.exit(app.exec_())

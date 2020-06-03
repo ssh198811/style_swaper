@@ -465,7 +465,24 @@ color: rgb(212, 212, 212);</string>
        <string>生成图片</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="preview_before_button2">
+     <widget class="QComboBox" name="picpath_bef_comboBox">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>160</y>
+        <width>321</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(90, 90, 90);
+color: rgb(212, 212, 212);</string>
+      </property>
+      <property name="modelColumn">
+       <number>0</number>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="preview_content2">
       <property name="geometry">
        <rect>
         <x>270</x>
@@ -480,20 +497,6 @@ color: rgb(212, 212, 212);</string>
       </property>
       <property name="text">
        <string>预览</string>
-      </property>
-     </widget>
-     <widget class="QComboBox" name="picpath_bef_comboBox">
-      <property name="geometry">
-       <rect>
-        <x>30</x>
-        <y>160</y>
-        <width>321</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(90, 90, 90);
-color: rgb(212, 212, 212);</string>
       </property>
      </widget>
     </widget>
@@ -1423,8 +1426,6 @@ color: rgb(212, 212, 212);</string>
    </widget>
    <zorder>make_project_dir_button</zorder>
    <zorder>SpecPic</zorder>
-   <zorder>project_dir_lineedit</zorder>
-   <zorder>dir_opera</zorder>
    <zorder>project_base_dir</zorder>
    <zorder>progress_Info</zorder>
    <zorder>label</zorder>

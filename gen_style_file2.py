@@ -6,6 +6,7 @@ from torchvision.utils import save_image
 from model import VGGEncoder, Decoder
 from style_swap import style_swap
 import InfoNotifier
+
 img_base = 256
 img_pad = 100
 
@@ -25,6 +26,7 @@ def denorm(tensor, device):
 def style_main2(pics_dir=[],style_dir='',save_dir=''):
     patch_size=1
     model_state_path = "./model_state.pth"
+    s_name = os.path.splitext(os.path.basename(style_dir))[0]
     if pics_dir is not None:
         content_name=pics_dir[0].replace("\\","/").split("/")[-2]
         # set device on GPU if available, else CPU
@@ -33,85 +35,99 @@ def style_main2(pics_dir=[],style_dir='',save_dir=''):
             print(f'# CUDA available: {torch.cuda.get_device_name(0)}')
         else:
             device = 'cpu'
-
+        #判断是否存在预览图，若都已存在则不加载模型
+        a=True
+        for pic_dir in pics_dir:
+            if os.path.exists(f'{os.path.dirname(pic_dir)}/temp/{s_name}/{os.path.basename(pic_dir)}') is False:
+                a=False
+        if a is False:
         # set model
 
-        d = Decoder()
-        d.load_state_dict(torch.load(model_state_path))
-        d = d.to(device)
+            d = Decoder()
+            d.load_state_dict(torch.load(model_state_path))
+            d = d.to(device)
 
-        s = Image.open(style_dir)
-        s_tensor = trans(s).unsqueeze(0).to(device)
+            s = Image.open(style_dir)
+            s_tensor = trans(s).unsqueeze(0).to(device)
 
-        for file_path in pics_dir:
-            if file_path.endswith(".jpg") is False:
-                continue
-            try:
-                e = VGGEncoder().to(device)
-                c = Image.open(file_path)
-                width_d = c.width // img_base
-                height_d = c.height // img_base
-                tar = Image.new('RGB', (c.width, c.height))
-                ##文件名
-                file=os.path.basename(file_path)
-                c_name = os.path.splitext(os.path.basename(file_path))[0]
-                s_name = os.path.splitext(os.path.basename(style_dir))[0]
-                print(s_name)
+            for file_path in pics_dir:
+                if file_path.endswith(".jpg") is False:
+                    continue
+                try:
+                    ##文件名
+                    file = os.path.basename(file_path)
+                    c_name = os.path.splitext(os.path.basename(file_path))[0]
+                    s_name = os.path.splitext(os.path.basename(style_dir))[0]
+                    if os.path.exists(
+                            f'{os.path.dirname(file_path)}/temp/{s_name}/{os.path.basename(file_path)}') is False:
+                        e = VGGEncoder().to(device)
+                        c = Image.open(file_path)
+                        width_d = c.width // img_base
+                        height_d = c.height // img_base
+                        tar = Image.new('RGB', (c.width, c.height))
 
-                # 切分大图为小图
-                for i in range(width_d):
-                    for j in range(height_d):
-                        c_div = c.crop((i * img_base - img_pad, j * img_base - img_pad, (i + 1) * img_base + img_pad,
-                                        (j + 1) * img_base + img_pad))
+                        print(s_name)
 
-                        c_tensor = trans(c_div).unsqueeze(0).to(device)
+                        # 切分大图为小图
+                        for i in range(width_d):
+                            for j in range(height_d):
+                                c_div = c.crop((i * img_base - img_pad, j * img_base - img_pad, (i + 1) * img_base + img_pad,
+                                                (j + 1) * img_base + img_pad))
 
-                        with torch.no_grad():
-                            cf = e(c_tensor)
-                            sf = e(s_tensor)
-                            style_swap_res = style_swap(cf, sf, patch_size, 1)
-                            del cf
-                            del sf
-                            out = d(style_swap_res)
+                                c_tensor = trans(c_div).unsqueeze(0).to(device)
 
-                        c_denorm = denorm(c_tensor, device)
-                        out_denorm = denorm(out, device)
-                        res = torch.cat([c_denorm, out_denorm], dim=0)
-                        res = res.to('cpu')
+                                with torch.no_grad():
+                                    cf = e(c_tensor)
+                                    sf = e(s_tensor)
+                                    style_swap_res = style_swap(cf, sf, patch_size, 1)
+                                    del cf
+                                    del sf
+                                    out = d(style_swap_res)
 
-                        output_name = f'{c_name}_{s_name}_{i}_{j}'
-                        save_image(out_denorm, f'{save_dir}/{output_name}.jpg', nrow=1)
+                                c_denorm = denorm(c_tensor, device)
+                                out_denorm = denorm(out, device)
+                                res = torch.cat([c_denorm, out_denorm], dim=0)
+                                res = res.to('cpu')
 
-                        img_tmp = Image.open(f'{save_dir}/{output_name}.jpg')
-                        img_tmp = img_tmp.crop((img_pad, img_pad, img_tmp.width - img_pad, img_tmp.height - img_pad))
-                        tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
+                                output_name = f'{c_name}_{s_name}_{i}_{j}'
+                                save_image(out_denorm, f'{os.path.dirname(file_path)}/{output_name}.jpg', nrow=1)
 
-                        os.unlink(f'{save_dir}/{output_name}.jpg')
+                                img_tmp = Image.open(f'{os.path.dirname(file_path)}/{output_name}.jpg')
+                                img_tmp = img_tmp.crop((img_pad, img_pad, img_tmp.width - img_pad, img_tmp.height - img_pad))
+                                tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
 
-            except RuntimeError:
-                print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
+                                os.unlink(f'{os.path.dirname(file_path)}/{output_name}.jpg')
 
-            try:
-                 # save style transfer result
-                if os.path.exists(f'{save_dir}{s_name}/') is False:
-                    os.makedirs(f'{save_dir}{s_name}/')
+                except RuntimeError:
+                    print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
 
-                    # tga_img = Image.open(content_dir + file.replace('.jpg', '.tga'))
-                    # ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
-                    # ir, ig, ib = tar.split()
-                    # tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
-                # file=file.replace("style_transfer/","")
-                print(f'contentname:{content_name};file:{file}')
-                # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
-                tar.save(f'{save_dir}{s_name}/' + file, quality=100)
-                print(f'result saved into files {save_dir}{s_name}/' + file)
-                import  InfoNotifier
-                InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(f'{save_dir}{s_name}/' + file)
+                try:
+                    if os.path.exists(
+                            f'{os.path.dirname(file_path)}/temp/{s_name}/{os.path.basename(file_path)}') is False:
+                     # save style transfer result
+                        if os.path.exists(f'{os.path.dirname(file_path)}/temp/{s_name}/') is False:
+                            os.makedirs(f'{os.path.dirname(file_path)}/temp/{s_name}/')
 
-            except BaseException as ec:
-                print(ec)
+                            # tga_img = Image.open(content_dir + file.replace('.jpg', '.tga'))
+                            # ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
+                            # ir, ig, ib = tar.split()
+                            # tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
+                        # file=file.replace("style_transfer/","")
+                        print(f'contentname:{content_name};file:{file}')
+                        # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
+                        tar.save(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file, quality=100)
+                        print(f'result saved into files{os.path.dirname(file_path)}/temp/{s_name}/' + file)
+
+                        InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file)
+                    else:
+                        InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file)
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file+'已存在')
+
+                except BaseException as ec:
+                    print(ec)
 
             del e
+
 
 
 
