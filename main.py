@@ -936,7 +936,7 @@ if __name__=='__main__':
                     main_cmd=f"{self.texconv_path} -dxt5 -file {seamless_path + os.path.basename(lerp_out_path)} -outdir {dds_output}"
                     main_cmd.replace("\n","")
                     os.system(main_cmd)
-            InfoNotifier.InfoNotifier.g_progress_info.append("dds图片已转化完毕，保存在工程文件dds_output中")
+            InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
             self._signal.emit()
         def run(self):
             self.expanded()
@@ -2043,6 +2043,7 @@ if __name__=='__main__':
             return b_use_expanded
         def save_style2(self):
             try:
+                InfoNotifier.InfoNotifier.g_progress_info.append("开始保存··············")
                 txt_file=self.txt_path
                 work_=self.ui.project_base_dir.text()
                 lerp_value=self.ui.change_coe_horizontalSlider2.value()
