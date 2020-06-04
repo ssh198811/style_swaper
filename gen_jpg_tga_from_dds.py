@@ -42,6 +42,8 @@ def gen_jpg_tga(file_='', work_="",dds_list=[]):
 
                 # do real job
                 os.system(main_cmd)
+            else:
+                print(jpg_path+' exists')
 
     except BaseException as e:
         print(e)

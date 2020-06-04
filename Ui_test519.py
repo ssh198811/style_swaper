@@ -478,11 +478,6 @@ class Ui_MainWindow(object):
         self.pre_bef_button3.setStyleSheet("background-color: rgb(90, 90, 90);\n"
 "color: rgb(212, 212, 212);")
         self.pre_bef_button3.setObjectName("pre_bef_button3")
-        self.comboBox = QtWidgets.QComboBox(self.pics)
-        self.comboBox.setGeometry(QtCore.QRect(40, 120, 311, 41))
-        self.comboBox.setStyleSheet("background-color: rgb(90, 90, 90);\n"
-"color: rgb(212, 212, 212);")
-        self.comboBox.setObjectName("comboBox")
         self.SpecPic.addTab(self.pics, "多选贴图导入")
         self.make_project_dir_button = QtWidgets.QPushButton(self.centralwidget)
         self.make_project_dir_button.setGeometry(QtCore.QRect(0, 20, 500, 31))
@@ -516,7 +511,7 @@ class Ui_MainWindow(object):
         self.action3.setObjectName("action3")
 
         self.retranslateUi(MainWindow)
-        self.SpecPic.setCurrentIndex(0)
+        self.SpecPic.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
