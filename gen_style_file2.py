@@ -100,6 +100,7 @@ def style_main2(pics_dir=[],style_dir='',save_dir=''):
 
                 except RuntimeError:
                     print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
+                    InfoNotifier.InfoNotifier.g_progress_info.append(file_path+'太大，无法迁移风格，推荐尝试1000×1000以下图片')
 
                 try:
                     if os.path.exists(
@@ -117,6 +118,7 @@ def style_main2(pics_dir=[],style_dir='',save_dir=''):
                         # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
                         tar.save(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file, quality=100)
                         print(f'result saved into files{os.path.dirname(file_path)}/temp/{s_name}/' + file)
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'已生成{os.path.dirname(file_path)}/temp/{s_name}/' + file)
 
                         InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file)
                     else:
@@ -125,8 +127,11 @@ def style_main2(pics_dir=[],style_dir='',save_dir=''):
 
                 except BaseException as ec:
                     print(ec)
-
-            del e
+                    InfoNotifier.InfoNotifier.g_progress_info.append(ec)
+            try:
+                del e
+            except:
+                pass
 
 
 

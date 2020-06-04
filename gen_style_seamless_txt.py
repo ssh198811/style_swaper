@@ -117,8 +117,10 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                                 os.unlink(f'{style_outdir}/{output_name}.jpg')
                     else:
                         print("exists")
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{style_outdir}{s_name}/' + file+'已存在，跳过')
                 except RuntimeError:
                     print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
+                    InfoNotifier.InfoNotifier.g_progress_info.append(file_path+'太大，无法迁移风格，推荐尝试1000×1000以下图片')
 
                 try:
                     if os.path.exists(f'{style_outdir}{s_name}/' + file) is False:
@@ -135,13 +137,15 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                         # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
                         tar.save(f'{style_outdir}{s_name}/' + file, quality=100)
                         print(f'result saved into files {style_outdir}{s_name}/' + file)
-                        import  InfoNotifier
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'stylized image has saved into files: {style_outdir}{s_name}/{file}')
+
                         InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(f'{style_outdir}{s_name}/' + file)
                     else:
                         print("exists")
 
                 except BaseException as ec:
                     print(ec)
+                    InfoNotifier.InfoNotifier.g_progress_info.append('error when saving stylized image:', ec)
         try:
             del e
         except:
