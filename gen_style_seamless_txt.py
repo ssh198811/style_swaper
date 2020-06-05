@@ -6,6 +6,7 @@ from torchvision.utils import save_image
 from model import VGGEncoder, Decoder
 from style_swap import style_swap
 import InfoNotifier
+from Get_path_class import  Get_path
 img_base = 256
 img_pad = 100
 
@@ -26,6 +27,7 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
     #txt_path='',work_=''
     patch_size=1
     model_state_path = "./model_state.pth"
+
     if os.path.exists(txt_path) is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
         # set device on GPU if available, else CPU
@@ -48,7 +50,11 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
         #read txt
         style_name=os.path.basename(style_dir).split('.')[0]
         f=open(txt_path,"r",encoding='utf-8-sig')
+        get_path = Get_path()
+        get_path.style_path = style_dir
+        get_path.work_ = work_
         for file_path in f:
+
             a = False
             # 判断该图片是否在选中目录中
             file_path = file_path.replace("\n", "").replace("\\","/")
@@ -57,15 +63,16 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                     a = True
                     break
             if a is True:
-
-                file_name=os.path.basename(file_path)
-                file_path=work_+'/'+file_path
-                parent_path=os.path.dirname(file_path)
-                jpg_path=parent_path+'/style_transfer/expanded/expanded_transfer/'+file_name.replace(".dds",".jpg")
+                get_path.dds_path = file_path
+                # file_name=os.path.basename(file_path)
+                # file_path=get_path.Real_DDs_path()
+                # parent_path=os.path.dirname(file_path)
+                jpg_path=get_path.GetEpandedJpgTgaPath()[0]
                 if os.path.exists(jpg_path) is False:
                     print(jpg_path+"is not exist,jump from process")
                     continue
-                style_outdir=parent_path+'/style_transfer/expanded/style_output/'
+                style_outdir=os.path.dirname(os.path.dirname(get_path.GetExpandedStylePath()))
+                style_output_path=get_path.GetExpandedStylePath()
                 if os.path.exists(style_outdir) is False:
                     os.makedirs(style_outdir)
 
@@ -75,7 +82,7 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                     file = os.path.basename(jpg_path)
                     c_name = os.path.splitext(os.path.basename(jpg_path))[0]
                     s_name = os.path.splitext(os.path.basename(style_dir))[0]
-                    if os.path.exists(f'{style_outdir}{s_name}/' + file) is False:
+                    if os.path.exists(get_path.GetExpandedStylePath()) is False:
 
                         e = VGGEncoder().to(device)
                         c = Image.open(jpg_path)
@@ -116,30 +123,30 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
 
                                 os.unlink(f'{style_outdir}/{output_name}.jpg')
                     else:
-                        print("exists")
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{style_outdir}{s_name}/' + file+'已存在，跳过')
+                        print("exists!")
+                        # InfoNotifier.InfoNotifier.g_progress_info.append(f'{style_outdir}/{s_name}/' + file+'已存在，跳过')
                 except RuntimeError:
                     print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
                     InfoNotifier.InfoNotifier.g_progress_info.append(file_path+'太大，无法迁移风格，推荐尝试1000×1000以下图片')
 
                 try:
-                    if os.path.exists(f'{style_outdir}{s_name}/' + file) is False:
+                    if os.path.exists(get_path.GetExpandedStylePath()) is False:
                         # save style transfer result
-                        if os.path.exists(f'{style_outdir}{s_name}/') is False:
-                            os.makedirs(f'{style_outdir}{s_name}/')
+                        if os.path.exists(os.path.dirname(get_path.GetExpandedStylePath())) is False:
+                            os.makedirs(os.path.dirname(get_path.GetExpandedStylePath()))
 
                             # tga_img = Image.open(content_dir + file.replace('.jpg', '.tga'))
                             # ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
                             # ir, ig, ib = tar.split()
                             # tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
                         # file=file.replace("style_transfer/","")
-                        print(f'contentname:{style_outdir};file:{file}')
+                        # print(f'contentname:{style_outdir};file:{file}')
                         # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
-                        tar.save(f'{style_outdir}{s_name}/' + file, quality=100)
-                        print(f'result saved into files {style_outdir}{s_name}/' + file)
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'stylized image has saved into files: {style_outdir}{s_name}/{file}')
+                        tar.save(get_path.GetExpandedStylePath(), quality=100)
+                        print(f'result saved into files {get_path.GetExpandedStylePath()}')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'stylized image has saved into files: {get_path.GetExpandedStylePath()}')
 
-                        InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(f'{style_outdir}{s_name}/' + file)
+                        InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(get_path.GetExpandedStylePath())
                     else:
                         print("exists")
 
@@ -241,26 +248,26 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
 #
 #     del e
 
-
-if __name__ == '__main__':
-
-    set_content_dir = 'H:/sword3-products-head/client/data/source/maps_source/foliage/Texture/style_transfer/'
-
-    set_content_name = 'gm_aglaiaodorata001_billboards.jpg'
-
-    set_style_dir = 'E:/Users/shishaohua.SHISHAOHUA1/PycharmProjects/Pytorch_Style_Swap-master/style_test/8.jpeg'
-
-    set_output_dir = set_content_dir+"style_output/"
-
-    # 判断是否是无缝贴图
-    set_b_use_expended_dir = False
-
-    if set_b_use_expended_dir is True:
-        set_content_dir += "expanded/"
-        set_output_dir += "expanded/"
-
-    assert os.path.exists(set_content_dir)
-    if os.path.exists(set_output_dir) is False:
-        os.makedirs(set_output_dir)
-
-    # main(set_content_dir, set_content_name, set_style_dir, set_output_dir)
+#
+# if __name__ == '__main__':
+#
+#     set_content_dir = 'H:/sword3-products-head/client/data/source/maps_source/foliage/Texture/style_transfer/'
+#
+#     set_content_name = 'gm_aglaiaodorata001_billboards.jpg'
+#
+#     set_style_dir = 'E:/Users/shishaohua.SHISHAOHUA1/PycharmProjects/Pytorch_Style_Swap-master/style_test/8.jpeg'
+#
+#     set_output_dir = set_content_dir+"style_output/"
+#
+#     # 判断是否是无缝贴图
+#     set_b_use_expended_dir = False
+#
+#     if set_b_use_expended_dir is True:
+#         set_content_dir += "expanded/"
+#         set_output_dir += "expanded/"
+#
+#     assert os.path.exists(set_content_dir)
+#     if os.path.exists(set_output_dir) is False:
+#         os.makedirs(set_output_dir)
+#
+#     # main(set_content_dir, set_content_name, set_style_dir, set_output_dir)
