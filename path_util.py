@@ -1,0 +1,106 @@
+import os
+
+
+class PathUtils:
+    def __init__(self, _work='', _style_path='', dds_path=''):
+        # self.ui = ui.Ui_MainWindow()
+        self.work_ = _work.replace("\n", "").replace("\\", "/")
+        self.style_path = _style_path.replace("\n", "").replace("\\", "/")
+        self.dds_path = dds_path.replace("\n", "").replace("\\", "/")
+        self.file_name_jpg = os.path.basename(self.dds_path.replace('.dds', '.jpg'))
+        self.file_name_tga = os.path.basename(self.dds_path.replace('.dds', '.tga'))
+        self.work_output = self.work_ + '/data/style_transfer'
+
+    # dds原图真实路径
+    def real_dds_path(self):
+        return f"{self.work_}/{self.dds_path}"
+
+    # 原图转 jpg 保存地址
+    def dds_to_jpg_path(self):
+        return self.work_output + self.dds_path.replace('.dds', '.jpg')
+
+    # 原图转 tga 保存地址
+    def dds_to_tga_path(self):
+        return self.work_output + self.dds_path.replace('.dds', '.tga')
+
+    def get_parent_name(self):
+        return os.path.dirname(self.dds_path.replace("\n", ""))
+
+    def get_style_name(self):
+        return os.path.basename(self.style_path).split('.')[0]
+
+    # temp预览图保存地址  这里应该是存output/temp？
+    def get_temp_preview_path(self):
+        return f"{self.work_output}/temp/{self.get_style_name()}/{self.file_name_jpg}"
+
+    # 风格图保存路径
+    def get_style_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/style_output/{self.get_style_name()}/{self.file_name_jpg}"
+
+    # lerp图
+    def get_jpg_lerp_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/lerp_output/{self.get_style_name()}/{self.file_name_jpg}"
+
+    def get_tga_lerp_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/lerp_output/{self.get_style_name()}/{self.file_name_tga}"
+
+    # dds图
+    def get_dds_output_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/dds_output/{self.get_style_name()}/"
+
+    # expanded jpg,tga
+    def get_expanded_jpg_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/{self.file_name_jpg}"
+
+    # expanded jpg,tga
+    def get_expanded_tga_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/{self.file_name_tga}"
+
+    # expanded-style
+    def get_expanded_style_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/style_output/{self.get_style_name()}/" \
+               f"{self.file_name_jpg} "
+
+    # expanded_lerp
+    def get_expanded_lerp_path_jpg(self):
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/lerp_output/{self.get_style_name()}/" \
+               f"{self.file_name_jpg}"
+
+    def get_expanded_lerp_path_tga(self):
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/lerp_output/{self.get_style_name()}/" \
+               f"{self.file_name_tga}"
+
+    # seamless
+    def get_seamless_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/seamless_output/{self.get_style_name()}/" \
+               f"{self.file_name_jpg}"
+
+    # expanded-dds
+    def get_seamless_dds_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/dds_output/{self.get_style_name()}/"
+
+
+if __name__ == '__main__':
+    a = PathUtils(_work='H:/sword3-products-head/client',
+                  _style_path='E:/Users/shishaohua.SHISHAOHUA1/PycharmProjects/style_swaper/style_swaper/style_test/1.jpg',
+                  dds_path='data/source/maps_source/texture/wj_gb路标003_01h.dds')
+
+
+    print(a.real_dds_path())
+    print(a.dds_to_jpg_path())
+    print(a.dds_to_tga_path())
+    print(a.get_parent_name())
+    print(a.get_style_name())
+    print(a.get_temp_preview_path())
+    print(a.get_style_path())
+    print(a.get_jpg_lerp_path())
+    print(a.get_tga_lerp_path())
+    print(a.get_dds_output_path())
+    print(a.get_expanded_jpg_path())
+    print(a.get_expanded_tga_path())
+    print(a.get_expanded_style_path())
+    print(a.get_expanded_lerp_path_jpg())
+    print(a.get_expanded_lerp_path_tga())
+    print(a.get_seamless_path())
+    print(a.get_seamless_dds_path())
+
