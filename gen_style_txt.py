@@ -6,7 +6,7 @@ from torchvision.utils import save_image
 from model import VGGEncoder, Decoder
 from style_swap import style_swap
 import InfoNotifier
-from Get_path_class import Get_path
+from path_util import PathUtils
 img_base = 256
 img_pad = 100
 
@@ -47,11 +47,9 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
 
 
         #read txt
-        style_name=os.path.basename(style_dir).split('.')[0]
+        # style_name=os.path.basename(style_dir).split('.')[0]
         f=open(txt_path,"r",encoding='utf-8-sig')
-        get_path=Get_path()
-        get_path.work_=work_
-        get_path.style_path=style_dir
+
         for file_path in f:
             file_path=file_path.replace("\n","").replace("\\","/")
             a=False
@@ -66,13 +64,17 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                 # file_name=os.path.basename(file_path)
                 # file_path=work_+'/'+file_path
                 # parent_path=os.path.dirname(file_path)
-                get_path.dds_path=file_path
-                jpg_path=get_path.DdsToJpgPath()[0]
+                get_path = PathUtils(_work=work_,_style_path=style_dir,dds_path=file_path)
+                # get_path.work_ = work_
+                # get_path.style_path = style_dir
+                # get_path.dds_path=file_path
+
+                jpg_path=get_path.dds_to_jpg_path()
                 # jpg_path=parent_path+'/style_transfer/'+file_name.replace(".dds",".jpg")
                 if os.path.exists(jpg_path) is False:
                     print(jpg_path+"is not exist,jump from process")
                     continue
-                style_outdir=os.path.dirname(os.path.dirname(get_path.GetStylePath()))
+                style_outdir=os.path.dirname(os.path.dirname(get_path.get_style_path()))
                 if os.path.exists(style_outdir) is False:
                     os.makedirs(style_outdir)
 
@@ -83,7 +85,7 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                     # file = os.path.basename(jpg_path)
                     c_name = os.path.splitext(os.path.basename(jpg_path))[0]
                     s_name = os.path.splitext(os.path.basename(style_dir))[0]
-                    if os.path.exists(get_path.GetStylePath()) is False:
+                    if os.path.exists(get_path.get_style_path()) is False:
 
                         # if os.path.exists(f'{style_outdir}{s_name}/' + file) is False:
                         e = VGGEncoder().to(device)
@@ -124,17 +126,17 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                                 os.unlink(f'{style_outdir}/{output_name}.jpg')
                     else:
                         print("file exists")
-                        InfoNotifier.InfoNotifier.g_progress_info.append(get_path.GetStylePath()+'已存在，跳过')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(get_path.get_style_path()+'已存在，跳过')
 
                 except RuntimeError:
                     print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
                     InfoNotifier.InfoNotifier.g_progress_info.append(f"{file_path}太大，无法迁移风格，推荐尝试1000×1000以下图片")
 
                 try:
-                    if os.path.exists(get_path.GetStylePath()) is False:
+                    if os.path.exists(get_path.get_style_path()) is False:
                          # save style transfer result
-                        if os.path.exists(os.path.dirname(get_path.GetStylePath())) is False:
-                            os.makedirs(os.path.dirname(get_path.GetStylePath()))
+                        if os.path.exists(os.path.dirname(get_path.get_style_path())) is False:
+                            os.makedirs(os.path.dirname(get_path.get_style_path()))
 
                             # tga_img = Image.open(content_dir + file.replace('.jpg', '.tga'))
                             # ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
@@ -143,10 +145,10 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                         # file=file.replace("style_transfer/","")
                         # print(f'save_path:{style_outdir};file:{file}')
                         # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
-                        tar.save(get_path.GetStylePath(), quality=100)
-                        print(f'result saved into files {get_path.GetStylePath()}/')
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'stylized image has saved into files: {get_path.GetStylePath()}')
-                        InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(get_path.GetStylePath())
+                        tar.save(get_path.get_style_path(), quality=100)
+                        print(f'result saved into files {get_path.get_style_path()}/')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'stylized image has saved into files: {get_path.get_style_path()}')
+                        InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(get_path.get_style_path())
                     else:
                         print("exists")
                 except BaseException as ec:

@@ -17,11 +17,11 @@ class PathUtils:
 
     # 原图转 jpg 保存地址
     def dds_to_jpg_path(self):
-        return self.work_output + self.dds_path.replace('.dds', '.jpg')
+        return self.work_output +'/'+ self.dds_path.replace('.dds', '.jpg')
 
     # 原图转 tga 保存地址
     def dds_to_tga_path(self):
-        return self.work_output + self.dds_path.replace('.dds', '.tga')
+        return self.work_output + '/'+self.dds_path.replace('.dds', '.tga')
 
     def get_parent_name(self):
         return os.path.dirname(self.dds_path.replace("\n", ""))
@@ -31,7 +31,7 @@ class PathUtils:
 
     # temp预览图保存地址  这里应该是存output/temp？
     def get_temp_preview_path(self):
-        return f"{self.work_output}/temp/{self.get_style_name()}/{self.file_name_jpg}"
+        return f"{self.work_output}/{self.get_parent_name()}/temp/{self.get_style_name()}/{self.file_name_jpg}"
 
     # 风格图保存路径
     def get_style_path(self):
@@ -58,8 +58,7 @@ class PathUtils:
 
     # expanded-style
     def get_expanded_style_path(self):
-        return f"{self.work_output}/{self.get_parent_name()}/expanded/style_output/{self.get_style_name()}/" \
-               f"{self.file_name_jpg} "
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/style_output/{self.get_style_name()}/{self.file_name_jpg}"
 
     # expanded_lerp
     def get_expanded_lerp_path_jpg(self):
@@ -67,13 +66,11 @@ class PathUtils:
                f"{self.file_name_jpg}"
 
     def get_expanded_lerp_path_tga(self):
-        return f"{self.work_output}/{self.get_parent_name()}/expanded/lerp_output/{self.get_style_name()}/" \
-               f"{self.file_name_tga}"
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/lerp_output/{self.get_style_name()}/{self.file_name_tga}"
 
     # seamless
     def get_seamless_path(self):
-        return f"{self.work_output}/{self.get_parent_name()}/expanded/seamless_output/{self.get_style_name()}/" \
-               f"{self.file_name_jpg}"
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/seamless_output/{self.get_style_name()}/{self.file_name_tga}"
 
     # expanded-dds
     def get_seamless_dds_path(self):

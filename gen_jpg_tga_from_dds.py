@@ -1,5 +1,5 @@
 import os
-from  Get_path_class import  Get_path
+from path_util import  PathUtils
 
 # 设置工作目录
 default_work_dir = "H:\\sword3-products-head\\client\\"
@@ -19,11 +19,9 @@ def gen_jpg_tga(file_='', work_="",dds_list=[]):
             file=file.replace("\n","")
             # 实例化
             # file = file.replace("\n", "")
-            a = Get_path()
-            a.work_ = work_
-            a.dds_path = file
+            a = PathUtils(_work=work_,dds_path=file)
 
-            file_real_path = a.Real_DDs_path()
+            file_real_path = a.real_dds_path()
             # file_real_path = work_ + file
             if os.path.exists(file_real_path) is False:
                 InfoNotifier.InfoNotifier.g_progress_info.append(f"{file_real_path} doesn't exist")
@@ -39,8 +37,8 @@ def gen_jpg_tga(file_='', work_="",dds_list=[]):
             # 创建 jpg tga
             # jpg_path = style_transfer_path + file_name.replace(".dds", ".jpg")
             # tga_path = style_transfer_path + file_name.replace(".dds", ".tga")
-            jpg_tga_path = a.DdsToJpgPath()
-            jpg_path, tga_path = jpg_tga_path[0], jpg_tga_path[1]
+            # jpg_tga_path = a.DdsToJpgPath()
+            jpg_path, tga_path = a.dds_to_jpg_path(), a.dds_to_tga_path()
             # if (os.path.exists(jpg_path) is False) or (os.path.exists(tga_path) is False):
             if os.path.exists(os.path.dirname(jpg_path)) is False:
                 os.makedirs(os.path.dirname(jpg_path))

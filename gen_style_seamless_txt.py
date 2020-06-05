@@ -6,7 +6,7 @@ from torchvision.utils import save_image
 from model import VGGEncoder, Decoder
 from style_swap import style_swap
 import InfoNotifier
-from Get_path_class import  Get_path
+from path_util import  PathUtils
 img_base = 256
 img_pad = 100
 
@@ -48,41 +48,44 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
 
 
         #read txt
-        style_name=os.path.basename(style_dir).split('.')[0]
+        # style_name=os.path.basename(style_dir).split('.')[0]
         f=open(txt_path,"r",encoding='utf-8-sig')
-        get_path = Get_path()
-        get_path.style_path = style_dir
-        get_path.work_ = work_
-        for file_path in f:
 
+        for file_path in f:
+            file_path = file_path.replace("\n", "").replace("\\", "/")
             a = False
             # 判断该图片是否在选中目录中
-            file_path = file_path.replace("\n", "").replace("\\","/")
+
             for file in chosen_content_file_list:
                 if dir_dict[file] in file_path:
                     a = True
                     break
             if a is True:
-                get_path.dds_path = file_path
+                get_path = PathUtils(_work=work_,_style_path=style_dir,dds_path=file_path)
+                # get_path.style_path = style_dir
+                # get_path.work_ = work_
+                # get_path.dds_path = file_path
                 # file_name=os.path.basename(file_path)
                 # file_path=get_path.Real_DDs_path()
                 # parent_path=os.path.dirname(file_path)
-                jpg_path=get_path.GetEpandedJpgTgaPath()[0]
+                jpg_path=get_path.get_expanded_jpg_path()
+                print(jpg_path)
                 if os.path.exists(jpg_path) is False:
                     print(jpg_path+"is not exist,jump from process")
                     continue
-                style_outdir=os.path.dirname(os.path.dirname(get_path.GetExpandedStylePath()))
-                style_output_path=get_path.GetExpandedStylePath()
+                style_outdir=os.path.dirname(os.path.dirname(get_path.get_expanded_style_path()))
+                print(style_outdir)
+                # style_output_path=get_path.GetExpandedStylePath()
                 if os.path.exists(style_outdir) is False:
                     os.makedirs(style_outdir)
 
                 if jpg_path.endswith(".jpg") is False:
                     continue
                 try:
-                    file = os.path.basename(jpg_path)
+                    # file = os.path.basename(jpg_path)
                     c_name = os.path.splitext(os.path.basename(jpg_path))[0]
                     s_name = os.path.splitext(os.path.basename(style_dir))[0]
-                    if os.path.exists(get_path.GetExpandedStylePath()) is False:
+                    if os.path.exists(get_path.get_expanded_style_path()) is False:
 
                         e = VGGEncoder().to(device)
                         c = Image.open(jpg_path)
@@ -124,16 +127,16 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                                 os.unlink(f'{style_outdir}/{output_name}.jpg')
                     else:
                         print("exists!")
-                        # InfoNotifier.InfoNotifier.g_progress_info.append(f'{style_outdir}/{s_name}/' + file+'已存在，跳过')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(get_path.get_expanded_style_path()+'已存在，跳过')
                 except RuntimeError:
                     print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
                     InfoNotifier.InfoNotifier.g_progress_info.append(file_path+'太大，无法迁移风格，推荐尝试1000×1000以下图片')
 
                 try:
-                    if os.path.exists(get_path.GetExpandedStylePath()) is False:
+                    if os.path.exists(get_path.get_expanded_style_path()) is False:
                         # save style transfer result
-                        if os.path.exists(os.path.dirname(get_path.GetExpandedStylePath())) is False:
-                            os.makedirs(os.path.dirname(get_path.GetExpandedStylePath()))
+                        if os.path.exists(os.path.dirname(get_path.get_expanded_style_path())) is False:
+                            os.makedirs(os.path.dirname(get_path.get_expanded_style_path()))
 
                             # tga_img = Image.open(content_dir + file.replace('.jpg', '.tga'))
                             # ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
@@ -142,17 +145,19 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                         # file=file.replace("style_transfer/","")
                         # print(f'contentname:{style_outdir};file:{file}')
                         # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
-                        tar.save(get_path.GetExpandedStylePath(), quality=100)
-                        print(f'result saved into files {get_path.GetExpandedStylePath()}')
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'stylized image has saved into files: {get_path.GetExpandedStylePath()}')
+                        print(get_path.get_expanded_style_path())
 
-                        InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(get_path.GetExpandedStylePath())
+                        tar.save(get_path.get_expanded_style_path(), quality=100)
+                        print(f'result saved into files {get_path.get_expanded_style_path()}')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'stylized image has saved into files: {get_path.get_expanded_style_path()}')
+
+                        InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(get_path.get_expanded_style_path())
                     else:
                         print("exists")
 
                 except BaseException as ec:
                     print(ec)
-                    InfoNotifier.InfoNotifier.g_progress_info.append('error when saving stylized image:', ec)
+                    # InfoNotifier.InfoNotifier.g_progress_info.append('error when saving stylized image')
         try:
             del e
         except:
