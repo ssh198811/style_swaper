@@ -27,6 +27,7 @@ def gen_jpg_tga(file_='', work_="",dds_list=[]):
                 InfoNotifier.InfoNotifier.g_progress_info.append(f"{file_real_path} doesn't exist")
                 continue
 
+
             # file_name = os.path.basename(file_real_path)
 
             # 创建style_transfer目录

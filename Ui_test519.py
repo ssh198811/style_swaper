@@ -199,7 +199,7 @@ class Ui_MainWindow(object):
 "color: rgb(212, 212, 212);")
         self.Pic_before_text1.setObjectName("Pic_before_text1")
         self.pic_before_label1 = QtWidgets.QLabel(self.t1)
-        self.pic_before_label1.setGeometry(QtCore.QRect(30, 220, 301, 251))
+        self.pic_before_label1.setGeometry(QtCore.QRect(30, 210, 301, 251))
         self.pic_before_label1.setStyleSheet("color: rgb(203, 203, 203);")
         self.pic_before_label1.setText("")
         self.pic_before_label1.setObjectName("pic_before_label1")
@@ -331,6 +331,13 @@ class Ui_MainWindow(object):
         self.pic_after_label1.setGeometry(QtCore.QRect(830, 200, 291, 271))
         self.pic_after_label1.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.pic_after_label1.setObjectName("pic_after_label1")
+        self.preview_content1 = QtWidgets.QPushButton(self.t1)
+        self.preview_content1.setGeometry(QtCore.QRect(260, 470, 75, 23))
+        self.preview_content1.setStyleSheet("background-color: rgb(90, 90, 90);\n"
+"color: rgb(212, 212, 212);\n"
+"\n"
+"")
+        self.preview_content1.setObjectName("preview_content1")
         self.SpecPic.addTab(self.t1, "多目录导入")
         self.pics = QtWidgets.QWidget()
         font = QtGui.QFont()
@@ -511,7 +518,7 @@ class Ui_MainWindow(object):
         self.action3.setObjectName("action3")
 
         self.retranslateUi(MainWindow)
-        self.SpecPic.setCurrentIndex(2)
+        self.SpecPic.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -538,6 +545,7 @@ class Ui_MainWindow(object):
         self.pic_after_text1.setText(_translate("MainWindow", "微调"))
         self.choose_pic_style_button1.setText(_translate("MainWindow", "导入风格图片"))
         self.Preview_button.setText(_translate("MainWindow", "生成图片"))
+        self.preview_content1.setText(_translate("MainWindow", "预览"))
         self.is_seamless_ornot_text3.setText(_translate("MainWindow", "是否输出无缝贴图："))
         self.savePic_button3.setText(_translate("MainWindow", "保存图片"))
         self.pic_style_text3.setText(_translate("MainWindow", "风格"))
