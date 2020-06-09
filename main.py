@@ -13,11 +13,9 @@ from PIL import Image
 import cv2
 import glob
 
-from gen_style_files import  style_main
-from gen_style_file2 import style_main2
-from gen_style_file3 import  style_main3
-import gen_style_seamless_txt
-from  gen_style_txt import style_txt_main2
+from Gen_Style import gen_style_class
+from Gen_Style.gen_style_files import  style_main
+from Gen_Style.gen_style_file2 import style_main2
 
 import  gen_jpg_tga_from_dds
 import json
@@ -314,51 +312,6 @@ if __name__=='__main__':
                     else:
                         InfoNotifier.InfoNotifier.g_progress_info.append(dds_output + file_name + '已存在，跳过')
                 InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
-
-                    # # dds_output=
-                    # if os.path.exists(sub_save_path) is False:
-                    #     os.makedirs(sub_save_path)
-                    #
-                    # content_list=glob.glob(sub_content_file+'*.jpg')
-                    # for content_pic in content_list:
-                    #     pic_name=os.path.basename(content_pic)
-                    #     style_pic=sub_style_file+pic_name
-                    #     if os.path.exists(style_pic) is False:
-                    #         InfoNotifier.InfoNotifier.g_progress_info.append(style_pic+' not exists')
-                    #         continue
-                    #
-                    #     save_pic_path=sub_save_path+pic_name
-                    #     if os.path.exists(save_pic_path) is False:
-                    #         lerp_ret,ret=gen_lerp_ret.lerp_img(content_pic,style_pic,self.lerp_value)
-                    #         gen_lerp_ret.write_img(lerp_ret,save_pic_path)
-                    #         tga_img=Image.open(sub_content_file+pic_name.split('.')[0]+'.tga')
-                    #         jpg_img=Image.open(save_pic_path)
-                    #         ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
-                    #         ir, ig, ib = jpg_img.split()
-                    #         tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
-                    #         save_pic_path=save_pic_path.replace(".jpg",".tga")
-                    #         tga_img.save(save_pic_path,quality=100)
-                    #         print(f"generate tga image {save_pic_path} after lerp op.")
-                    #     dds_save_path=loc+'/style_transfer/expanded/dds_output/'+style_name+'/'
-                    #
-                    #     if os.path.exists(dds_save_path) is False:
-                    #         os.makedirs(dds_save_path)
-                    #     ###生成无缝贴图（.tga）
-                    #     seamless_path=loc+f'/style_transfer/expanded/seamless/{style_name}/'
-                    #     if os.path.exists(seamless_path) is False:
-                    #         os.makedirs(seamless_path)
-                    #     img=Image.open(save_pic_path)
-                    #     width = img.width
-                    #     height = img.height
-                    #     pad=256
-                    #     img_crop = img.crop((pad, pad, width - pad, height - pad))
-                    #     img_crop.save(seamless_path+os.path.basename(save_pic_path),quality=100)
-                    #
-                    #
-                    #
-                    #     main_cmd=f"{self.texconv_path} -dxt5 -file {seamless_path+os.path.basename(save_pic_path)} -outdir {dds_save_path}"
-                    #     main_cmd=main_cmd.replace("\n","")
-                    #     os.system(main_cmd)
                 InfoNotifier.InfoNotifier.g_progress_info.append("dds图片已转化完毕，保存在工程文件dds_output中")
             except BaseException as be:
                 print(be)
@@ -661,17 +614,7 @@ if __name__=='__main__':
             # style_name = os.path.basename(style_pic).split('.')[0]
             style_main2(content_list, style_pic, self.temp_file_name)
             InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览")
-            # if os.path.exists(self.temp_file_name + style_name + '/') is False:
-            #     style_main2(content_list, style_pic, self.temp_file_name)
-            #     InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
-            # else:
-            #     for file_path in content_list:
-            #         file = os.path.basename(file_path)
-            #         # style_path=
-            #         InfoNotifier.InfoNotifier.style_preview_pic_dir2.append(
-            #             f'{self.temp_file_name}{style_name}/' + file)
-            #     InfoNotifier.InfoNotifier.g_progress_info.append(self.temp_file_name + style_name + '已存在，点击一张原图进行预览')
-            # main(pics_dir=[], style_dir='', save_dir='')
+
             self._signal.emit()
 
         def run(self):
@@ -705,8 +648,8 @@ if __name__=='__main__':
 
 
 
-
-            style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
+            gen_style_class.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict,False)
+            # style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
             for file in f:
 
                 file=file.replace("\n","").replace("\\","/")
@@ -739,8 +682,7 @@ if __name__=='__main__':
 
                     jpg_path = get_path.dds_to_jpg_path()
                     tga_path = get_path.dds_to_tga_path()
-                    # pic_list=[jpg_path]
-                    # style_main2(pic_list,self.chosen_style_pic,self.style_output)
+
                     #lerp
                     style_out_pic_path=get_path.get_style_path()
                     if os.path.exists(style_out_pic_path) is False:
@@ -876,7 +818,9 @@ if __name__=='__main__':
 
             f = open(self.txt_path, "r", encoding='utf-8-sig')
             # f.readline()
-            gen_style_seamless_txt.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
+            gen_style_class.style_txt_main2(self.txt_path, self.work_, self.chosen_style_pic,
+                                            self.chosen_content_file_list, self.dir_dict, True)
+            # gen_style_seamless_txt.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
             # gen_style_class.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict,True)
             for file in f:
 
@@ -938,9 +882,7 @@ if __name__=='__main__':
                     # img_tga_crop.save(self.expanded_transfer+os.path.basename(tga_path),quality=100)
                     # print(self.expanded_transfer+os.path.basename(tga_path))
                     tmp_style_in=jpg_path
-                    # style_out=self.style_output+style_name+'/'
-                    # tmp_style_list=[tmp_style_in]
-                    # style_main2(tmp_style_list,self.chosen_style_pic,self.style_output)
+
 
                     #lerp
                     style_out_pic_path=get_path.get_expanded_style_path()
@@ -1056,13 +998,12 @@ if __name__=='__main__':
             style_name=os.path.basename(style_pic).split('.')[0]
             if os.path.exists(self.temp_file_name) is False:
                 os.makedirs(self.temp_file_name)
-            #
-            # style_main3(content_list, style_pic, self.temp_file_name)
-            # InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
+
 
             """让生成过的临时文件不再重新生成"""
             if os.path.exists(self.temp_file_name + style_name + '/'+file_name) is False:
-                style_main3(content_list, style_pic, self.temp_file_name)
+                # style_main3(content_list, style_pic, self.temp_file_name)
+                style_main2(content_list,style_pic,self.temp_file_name)
                 InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
             else:
                 for file_path in content_list:
@@ -2058,7 +1999,6 @@ if __name__=='__main__':
                     self.chosen_content_list3.append(file.replace(self.ui.project_base_dir.text()+'/',""))
             InfoNotifier.InfoNotifier.g_progress_info.append(f"已选中{len(self.chosen_content_list3)}张图片")
             print(self.chosen_content_list3)
-
         def gen_jpg_tga3(self):
             self.ui.choose_pics_button3.setEnabled(False)
             self.base=self.ui.project_base_dir.text()
@@ -2223,7 +2163,13 @@ if __name__=='__main__':
                 content_index = self.ui.pic_before_listWidget3.currentIndex().row()
                 content_pic = self.tmp_before_list3[content_index]
 
-                after_pic_dir = InfoNotifier.InfoNotifier.style_preview_pic_dir3[content_index]
+                # after_pic_dir = InfoNotifier.InfoNotifier.style_preview_pic_dir3[content_index]
+                if self.chosen_style_pic3 != '':
+                    s_name=os.path.basename(self.chosen_style_pic3).split('.')[0]
+
+                    after_pic_dir=os.path.dirname(content_pic)+'/temp/'+s_name+'/'+os.path.basename(content_pic)
+                else:
+                    return
 
                 self.save_path1 = self.tem_file + 'lerp.jpg'
                 self.value_slider = self.ui.change_coe_horizontalSlider3.value()
