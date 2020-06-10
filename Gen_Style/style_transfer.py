@@ -286,7 +286,6 @@ def load_model(device):
     return d
 
 # get content name and file name
-
 def get_c_name_and_file_name(file_path):
     file = os.path.basename(file_path)
     c_name = os.path.splitext(os.path.basename(file_path))[0]
@@ -299,9 +298,8 @@ def get_style_name(style_dir):
     return  s_name
 
 
-
 # get_target_img
-def get_target_img(file_path,device,e,d,s_tensor,c_name,s_name,style_outdir):
+def get_target_img(file_path, device, e, d, s_tensor, c_name, s_name, style_outdir):
     c = Image.open(file_path)
     width_d = c.width // img_base
     height_d = c.height // img_base
@@ -337,7 +335,7 @@ def get_target_img(file_path,device,e,d,s_tensor,c_name,s_name,style_outdir):
             img_tmp = img_tmp.crop((img_pad, img_pad, img_tmp.width - img_pad, img_tmp.height - img_pad))
             tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
             os.unlink(f'{style_outdir}/{output_name}.jpg')
-    return  tar
+    return tar
 
 
 

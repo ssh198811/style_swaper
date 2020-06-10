@@ -133,41 +133,36 @@ class My_gen_style_thread2(QThread):
                     InfoNotifier.InfoNotifier.g_progress_info.append(f"不存在对应风格化图片{style_out_pic_path}。跳过本张图片")
                     continue
                 lerp_out_path = get_path.get_jpg_lerp_path()
-                if os.path.exists(lerp_out_path) is False:
-                    if os.path.exists(os.path.dirname(lerp_out_path)) is False:
-                        os.makedirs(os.path.dirname(lerp_out_path))
+                if os.path.exists(os.path.dirname(lerp_out_path)) is False:
+                    os.makedirs(os.path.dirname(lerp_out_path))
 
-                    if os.path.exists(jpg_path) is False:
-                        print(jpg_path + " is not exist!")
-                        continue
+                if os.path.exists(jpg_path) is False:
+                    print(jpg_path + " is not exist!")
+                    continue
 
-                    lerp_ret, _ = gen_lerp_ret.lerp_img(jpg_path, style_out_pic_path, self.lerg_value)
-                    gen_lerp_ret.write_img(lerp_ret, lerp_out_path)
-                    # combine alpha c
-                    tga_img = Image.open(tga_path)
-                    jpg_img = Image.open(lerp_out_path)
-                    ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
-                    ir, ig, ib = jpg_img.split()
-                    tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
-                    lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
-                    tga_img.save(lerp_out_path, quality=100)
-                    print(f"generate tga image {lerp_out_path} after lerp op.")
-                    InfoNotifier.InfoNotifier.g_progress_info.append(f"生成插值操作后的tga图片{lerp_out_path} ")
-                else:
-                    InfoNotifier.InfoNotifier.g_progress_info.append(f"{lerp_out_path}已存在 ")
+                lerp_ret, _ = gen_lerp_ret.lerp_img(jpg_path, style_out_pic_path, self.lerg_value)
+                gen_lerp_ret.write_img(lerp_ret, lerp_out_path)
+                # combine alpha c
+                tga_img = Image.open(tga_path)
+                jpg_img = Image.open(lerp_out_path)
+                ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
+                ir, ig, ib = jpg_img.split()
+                tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
+                lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
+                tga_img.save(lerp_out_path, quality=100)
+                print(f"generate tga image {lerp_out_path} after lerp op.")
+                InfoNotifier.InfoNotifier.g_progress_info.append(f"生成插值操作后的tga图片{lerp_out_path} ")
+
                 dds_out = get_path.get_dds_output_path()
-                if os.path.exists(dds_out + file_name) is False:
-                    if os.path.exists(dds_out) is False:
-                        os.makedirs(dds_out)
-                    main_cmd = f"{self.texconv_path} -dxt5 -file {lerp_out_path} -outdir {dds_out}"
-                    main_cmd.replace("\n", "")
-                    try:
-                        os.system(main_cmd)
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f"将{lerp_out_path}转化为DDS格式···")
-                    except BaseException as bec:
-                        InfoNotifier.InfoNotifier.g_progress_info.append(bec)
-                else:
-                    InfoNotifier.InfoNotifier.g_progress_info.append(dds_out + file_name + '已存在，跳过')
+                if os.path.exists(dds_out) is False:
+                    os.makedirs(dds_out)
+                main_cmd = f"{self.texconv_path} -dxt5 -file {lerp_out_path} -outdir {dds_out}"
+                main_cmd.replace("\n", "")
+                try:
+                    os.system(main_cmd)
+                    InfoNotifier.InfoNotifier.g_progress_info.append(f"将{lerp_out_path}转化为DDS格式···")
+                except BaseException as bec:
+                    InfoNotifier.InfoNotifier.g_progress_info.append(bec)
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
         self._signal.emit()
 
@@ -280,48 +275,43 @@ class My_gen_seamless_thread2(QThread):
                     continue
 
                 lerp_out_path = get_path.get_expanded_lerp_path_jpg()
-                if os.path.exists(lerp_out_path) is False:
-                    if os.path.exists(os.path.dirname(lerp_out_path)) is False:
-                        os.makedirs(os.path.dirname(lerp_out_path))
-                    lerp_ret, _ = gen_lerp_ret.lerp_img(tmp_style_in, style_out_pic_path, self.lerg_value)
-                    gen_lerp_ret.write_img(lerp_ret, lerp_out_path)
-                    # combine alpha c
-                    tga_img = Image.open(tga_path)
-                    jpg_img = Image.open(lerp_out_path)
-                    ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
-                    ir, ig, ib = jpg_img.split()
-                    tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
-                    lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
-                    tga_img.save(lerp_out_path, quality=100)
-                    print(f"generate tga image {lerp_out_path} after lerp op.")
-                    InfoNotifier.InfoNotifier.g_progress_info.append('生成插值操作后的tga图片' + lerp_out_path)
-                else:
-                    InfoNotifier.InfoNotifier.g_progress_info.append(lerp_out_path + "已存在，跳过")
-                # seamless
-                if os.path.exists(get_path.get_seamless_path()) is False:
-                    seamless_path = os.path.dirname(get_path.get_seamless_path())
-                    if os.path.exists(seamless_path) is False:
-                        os.makedirs(seamless_path)
-                    # print("seamless:"+PathUtils.get_expanded_lerp_path_tga())
+                if os.path.exists(os.path.dirname(lerp_out_path)) is False:
+                    os.makedirs(os.path.dirname(lerp_out_path))
+                lerp_ret, _ = gen_lerp_ret.lerp_img(tmp_style_in, style_out_pic_path, self.lerg_value)
+                gen_lerp_ret.write_img(lerp_ret, lerp_out_path)
+                # combine alpha c
+                tga_img = Image.open(tga_path)
+                jpg_img = Image.open(lerp_out_path)
+                ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
+                ir, ig, ib = jpg_img.split()
+                tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
+                lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
+                tga_img.save(lerp_out_path, quality=100)
+                print(f"generate tga image {lerp_out_path} after lerp op.")
+                InfoNotifier.InfoNotifier.g_progress_info.append('生成插值操作后的tga图片' + lerp_out_path)
 
-                    img = Image.open(get_path.get_expanded_lerp_path_tga())
-                    width = img.width
-                    height = img.height
-                    pad = 256
-                    img_crop = img.crop((pad, pad, width - pad, height - pad))
-                    img_crop.save(get_path.get_seamless_path(), quality=100)
-                    InfoNotifier.InfoNotifier.g_progress_info.append('生成无缝贴图' + get_path.get_seamless_path())
+                # seamless
+                seamless_path = os.path.dirname(get_path.get_seamless_path())
+                if os.path.exists(seamless_path) is False:
+                    os.makedirs(seamless_path)
+                # print("seamless:"+PathUtils.get_expanded_lerp_path_tga())
+
+                img = Image.open(get_path.get_expanded_lerp_path_tga())
+                width = img.width
+                height = img.height
+                pad = 256
+                img_crop = img.crop((pad, pad, width - pad, height - pad))
+                img_crop.save(get_path.get_seamless_path(), quality=100)
+                InfoNotifier.InfoNotifier.g_progress_info.append('生成无缝贴图' + get_path.get_seamless_path())
                 dds_output = get_path.get_seamless_dds_path()
-                if os.path.exists(dds_output + file_name) is False:
-                    seamless_path = os.path.dirname(get_path.get_seamless_path())
-                    if os.path.exists(dds_output) is False:
-                        os.makedirs(dds_output)
-                    main_cmd = f"{self.texconv_path} -dxt5 -file {get_path.get_seamless_path()} -outdir {dds_output}"
-                    main_cmd.replace("\n", "")
-                    os.system(main_cmd)
-                    InfoNotifier.InfoNotifier.g_progress_info.append(f'将{dds_output}{file_name}转化为DDS格式···')
-                else:
-                    InfoNotifier.InfoNotifier.g_progress_info.append(dds_output + file_name + '已存在，跳过')
+                seamless_path = os.path.dirname(get_path.get_seamless_path())
+                if os.path.exists(dds_output) is False:
+                    os.makedirs(dds_output)
+                main_cmd = f"{self.texconv_path} -dxt5 -file {get_path.get_seamless_path()} -outdir {dds_output}"
+                main_cmd.replace("\n", "")
+                os.system(main_cmd)
+                InfoNotifier.InfoNotifier.g_progress_info.append(f'将{dds_output}{file_name}转化为DDS格式···')
+
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
         self._signal.emit()
 
