@@ -66,7 +66,7 @@ class My_gen_style_temp_thread2(QThread):
         # for i in content_list:
         #     save_temp_dir=self.temp_file_name+str(index)+'.jpg'
         # style_name = os.path.basename(style_pic).split('.')[0]
-        style_transfer.style_main2(content_list, style_pic, self.temp_file_name)
+        style_transfer.style_main2(content_list, style_pic)
         InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览")
 
         self._signal.emit()

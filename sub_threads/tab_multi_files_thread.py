@@ -101,7 +101,7 @@ class My_gen_style_temp_thread(QThread):
             self.project_base=project_base
         def preview_lerg_pics(self):
 
-            style_transfer.style_main2(self.show_list,self.chosen_style_pic,self.project_base)
+            style_transfer.style_main2(self.show_list,self.chosen_style_pic)
             InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
             self._signal_trigger.emit()
 

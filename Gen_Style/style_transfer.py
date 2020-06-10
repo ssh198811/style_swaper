@@ -26,7 +26,7 @@ def denorm(tensor, device):
 
 
 # work for making temp img
-def style_main2(pics_dir=[],style_dir='',save_dir=''):
+def style_main2(pics_dir=[],style_dir=''):
     patch_size=1
     model_state_path = "./model_state.pth"
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
@@ -125,7 +125,6 @@ def style_main2(pics_dir=[],style_dir='',save_dir=''):
                 del e
             except:
                 pass
-
 
 
 # work in tab_multi_files && tab_specific_pics part
@@ -235,7 +234,6 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
                     del e
                 except:
                     pass
-
 
 
 # work in tab_txt part

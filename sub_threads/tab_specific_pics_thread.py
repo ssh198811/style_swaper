@@ -80,22 +80,27 @@ class My_gen_style_temp_thread3(QThread):
     def gen_style(self):
         style_pic = self.chosen_style_pic
         content_list = self.show_list
-        file_name = os.path.basename(content_list[0])
+
         style_name = os.path.basename(style_pic).split('.')[0]
         if os.path.exists(self.temp_file_name) is False:
             os.makedirs(self.temp_file_name)
 
         """让生成过的临时文件不再重新生成"""
-        if os.path.exists(self.temp_file_name + style_name + '/' + file_name) is False:
+        a=True
+        for i in range(len(content_list)):
+            file_name = os.path.basename(content_list[i])
+            if os.path.exists(self.temp_file_name + style_name + '/' + file_name) is False:
+                a=False
             # style_main3(content_list, style_pic, self.temp_file_name)
-            style_transfer.style_main2(content_list, style_pic, self.temp_file_name)
-            InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
-        else:
-            for file_path in content_list:
-                file = os.path.basename(file_path)
-                # style_path=
-                # InfoNotifier.InfoNotifier.style_preview_pic_dir3.append(f'{self.temp_file_name}{style_name}/' + file)
-            InfoNotifier.InfoNotifier.g_progress_info.append(self.temp_file_name + style_name + '已存在，点击一张原图进行预览')
+        if a is False:
+            style_transfer.style_main2(content_list, style_pic)
+        InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
+        # else:
+        #     for file_path in content_list:
+        #         file = os.path.basename(file_path)
+        #         # style_path=
+        #         # InfoNotifier.InfoNotifier.style_preview_pic_dir3.append(f'{self.temp_file_name}{style_name}/' + file)
+        #     InfoNotifier.InfoNotifier.g_progress_info.append(self.temp_file_name + style_name + '已存在，点击一张原图进行预览')
 
         # main(pics_dir=[], style_dir='', save_dir='')
         self._signal.emit()
