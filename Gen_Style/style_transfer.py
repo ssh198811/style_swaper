@@ -11,6 +11,9 @@ import InfoNotifier
 img_base = 256
 img_pad = 100
 
+patch_size = 1
+model_state_path = "./model_state.pth"
+
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
@@ -27,17 +30,11 @@ def denorm(tensor, device):
 
 # work for making temp img
 def style_main2(pics_dir=[],style_dir=''):
-    patch_size=1
-    model_state_path = "./model_state.pth"
+
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
     if pics_dir is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
-        # set device on GPU if available, else CPU
-        if torch.cuda.is_available():
-            device = torch.device('cuda')
-            print(f'# CUDA available: {torch.cuda.get_device_name(0)}')
-        else:
-            device = 'cpu'
+        device=Device()
         #判断是否存在预览图，若都已存在则不加载模型
         a=True
         for pic_dir in pics_dir:
@@ -46,9 +43,7 @@ def style_main2(pics_dir=[],style_dir=''):
         if a is False:
         # set model
 
-            d = Decoder()
-            d.load_state_dict(torch.load(model_state_path))
-            d = d.to(device)
+            d = load_model(device)
 
             s = Image.open(style_dir)
             s_tensor = trans(s).unsqueeze(0).to(device)
@@ -58,48 +53,13 @@ def style_main2(pics_dir=[],style_dir=''):
                     continue
                 try:
                     ##文件名
-                    file = os.path.basename(file_path)
-                    c_name = os.path.splitext(os.path.basename(file_path))[0]
-                    s_name = os.path.splitext(os.path.basename(style_dir))[0]
+                    file,c_name = get_c_name_and_file_name(file_path)
+                    s_name = get_style_name(style_dir)
+
                     if os.path.exists(
                             f'{os.path.dirname(file_path)}/temp/{s_name}/{os.path.basename(file_path)}') is False:
                         e = VGGEncoder().to(device)
-                        c = Image.open(file_path)
-                        width_d = c.width // img_base
-                        height_d = c.height // img_base
-                        tar = Image.new('RGB', (c.width, c.height))
-
-                        print(s_name)
-
-                        # 切分大图为小图
-                        for i in range(width_d):
-                            for j in range(height_d):
-                                c_div = c.crop((i * img_base - img_pad, j * img_base - img_pad, (i + 1) * img_base + img_pad,
-                                                (j + 1) * img_base + img_pad))
-
-                                c_tensor = trans(c_div).unsqueeze(0).to(device)
-
-                                with torch.no_grad():
-                                    cf = e(c_tensor)
-                                    sf = e(s_tensor)
-                                    style_swap_res = style_swap(cf, sf, patch_size, 1)
-                                    del cf
-                                    del sf
-                                    out = d(style_swap_res)
-
-                                c_denorm = denorm(c_tensor, device)
-                                out_denorm = denorm(out, device)
-                                res = torch.cat([c_denorm, out_denorm], dim=0)
-                                res = res.to('cpu')
-
-                                output_name = f'{c_name}_{s_name}_{i}_{j}'
-                                save_image(out_denorm, f'{os.path.dirname(file_path)}/{output_name}.jpg', nrow=1)
-
-                                img_tmp = Image.open(f'{os.path.dirname(file_path)}/{output_name}.jpg')
-                                img_tmp = img_tmp.crop((img_pad, img_pad, img_tmp.width - img_pad, img_tmp.height - img_pad))
-                                tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
-
-                                os.unlink(f'{os.path.dirname(file_path)}/{output_name}.jpg')
+                        tar=get_target_img(file_path,device,e,d,s_tensor,c_name,s_name,style_outdir=os.path.dirname(file_path))
 
                 except RuntimeError:
                     print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
@@ -116,7 +76,7 @@ def style_main2(pics_dir=[],style_dir=''):
                         InfoNotifier.InfoNotifier.g_progress_info.append(f'已生成{os.path.dirname(file_path)}/temp/{s_name}/' + file)
                     else:
 
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file+'已存在')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file+'已存在，跳过')
 
                 except BaseException as ec:
                     print(ec)
@@ -129,17 +89,12 @@ def style_main2(pics_dir=[],style_dir=''):
 
 # work in tab_multi_files && tab_specific_pics part
 def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
-    patch_size=1
-    model_state_path = "./model_state.pth"
+
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
     if pics_dir is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
         # set device on GPU if available, else CPU
-        if torch.cuda.is_available():
-            device = torch.device('cuda')
-            print(f'# CUDA available: {torch.cuda.get_device_name(0)}')
-        else:
-            device = 'cpu'
+        device=Device()
         # 判断是否存在预览图，若都已存在则不加载模型
         a = True
         for pic_dir in pics_dir:
@@ -148,9 +103,7 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
         if a is False:
             # set model
 
-            d = Decoder()
-            d.load_state_dict(torch.load(model_state_path))
-            d = d.to(device)
+            d = load_model(device)
 
             s = Image.open(style_dir)
             s_tensor = trans(s).unsqueeze(0).to(device)
@@ -172,45 +125,15 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
                 try:
 
                     ##文件名
-                    # file=os.path.basename(jpg_path)
-                    c_name = os.path.splitext(os.path.basename(jpg_path))[0]
-                    s_name = os.path.splitext(os.path.basename(style_dir))[0]
+                    # # file=os.path.basename(jpg_path)
+                    # c_name = os.path.splitext(os.path.basename(jpg_path))[0]
+                    # s_name = os.path.splitext(os.path.basename(style_dir))[0]
+                    file, c_name = get_c_name_and_file_name(jpg_path)
+                    s_name = get_style_name(style_dir)
                     print(s_name)
                     if os.path.exists(style_output) is False :
                         e = VGGEncoder().to(device)
-                        c = Image.open(jpg_path)
-                        width_d = c.width // img_base
-                        height_d = c.height // img_base
-                        tar = Image.new('RGB', (c.width, c.height))
-                        # 切分大图为小图
-                        for i in range(width_d):
-                            for j in range(height_d):
-                                c_div = c.crop((i * img_base - img_pad, j * img_base - img_pad, (i + 1) * img_base + img_pad,
-                                                (j + 1) * img_base + img_pad))
-
-                                c_tensor = trans(c_div).unsqueeze(0).to(device)
-
-                                with torch.no_grad():
-                                    cf = e(c_tensor)
-                                    sf = e(s_tensor)
-                                    style_swap_res = style_swap(cf, sf, patch_size, 1)
-                                    del cf
-                                    del sf
-                                    out = d(style_swap_res)
-
-                                c_denorm = denorm(c_tensor, device)
-                                out_denorm = denorm(out, device)
-                                res = torch.cat([c_denorm, out_denorm], dim=0)
-                                res = res.to('cpu')
-
-                                output_name = f'{c_name}_{s_name}_{i}_{j}'
-                                save_image(out_denorm, f'{save_dir}/{output_name}.jpg', nrow=1)
-
-                                img_tmp = Image.open(f'{save_dir}/{output_name}.jpg')
-                                img_tmp = img_tmp.crop((img_pad, img_pad, img_tmp.width - img_pad, img_tmp.height - img_pad))
-                                tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
-
-                                os.unlink(f'{save_dir}/{output_name}.jpg')
+                        tar = get_target_img(jpg_path,device,e,d,s_tensor,c_name,s_name,style_outdir=save_dir)
                     else:
                         print("file exists")
                         InfoNotifier.InfoNotifier.g_progress_info.append(get_path.get_style_path() + '已存在，跳过')
@@ -225,9 +148,11 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
 
                         tar.save(style_output, quality=100)
                         print(f'result saved into files {style_output}')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(
+                             f'风格图保存到: {style_output}')
                     else:
-                        print('exists')
-
+                        # print('exists')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(style_output+' 已存在，跳过')
                 except BaseException as ec:
                     print(ec)
                 try:
@@ -238,30 +163,22 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
 
 # work in tab_txt part
 def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[],dir_dict={},seamless=False):
-    #txt_path='',work_=''
-    patch_size=1
-    model_state_path = "./model_state.pth"
+
     if os.path.exists(txt_path) is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
         # set device on GPU if available, else CPU
-        if torch.cuda.is_available():
-            device = torch.device('cuda')
-            print(f'# CUDA available: {torch.cuda.get_device_name(0)}')
-        else:
-            device = 'cpu'
+        device=Device()
 
         # set model
 
-        d = Decoder()
-        d.load_state_dict(torch.load(model_state_path))
-        d = d.to(device)
+        d = load_model(device)
 
         s = Image.open(style_dir)
         s_tensor = trans(s).unsqueeze(0).to(device)
 
 
         #read txt
-        style_name=os.path.basename(style_dir).split('.')[0]
+        # style_name=os.path.basename(style_dir).split('.')[0]
         f=open(txt_path,"r",encoding='utf-8-sig')
 
         for file_path in f:
@@ -304,48 +221,16 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                     continue
                 try:
                     ##文件名
-                    # file = os.path.basename(jpg_path)
-                    c_name = os.path.splitext(os.path.basename(jpg_path))[0]
-                    s_name = os.path.splitext(os.path.basename(style_dir))[0]
+                    # # file = os.path.basename(jpg_path)
+                    # c_name = os.path.splitext(os.path.basename(jpg_path))[0]
+                    # s_name = os.path.splitext(os.path.basename(style_dir))[0]
+                    file, c_name = get_c_name_and_file_name(jpg_path)
+                    s_name = get_style_name(style_dir)
                     if os.path.exists(style_output_path) is False:
 
                         # if os.path.exists(f'{style_outdir}{s_name}/' + file) is False:
                         e = VGGEncoder().to(device)
-                        c = Image.open(jpg_path)
-                        width_d = c.width // img_base
-                        height_d = c.height // img_base
-                        tar = Image.new('RGB', (c.width, c.height))
-
-
-                        # 切分大图为小图
-                        for i in range(width_d):
-                            for j in range(height_d):
-                                c_div = c.crop((i * img_base - img_pad, j * img_base - img_pad, (i + 1) * img_base + img_pad,
-                                                (j + 1) * img_base + img_pad))
-
-                                c_tensor = trans(c_div).unsqueeze(0).to(device)
-
-                                with torch.no_grad():
-                                    cf = e(c_tensor)
-                                    sf = e(s_tensor)
-                                    style_swap_res = style_swap(cf, sf, patch_size, 1)
-                                    del cf
-                                    del sf
-                                    out = d(style_swap_res)
-
-                                c_denorm = denorm(c_tensor, device)
-                                out_denorm = denorm(out, device)
-                                res = torch.cat([c_denorm, out_denorm], dim=0)
-                                res = res.to('cpu')
-
-                                output_name = f'{c_name}_{s_name}_{i}_{j}'
-                                save_image(out_denorm, f'{style_outdir}/{output_name}.jpg', nrow=1)
-
-                                img_tmp = Image.open(f'{style_outdir}/{output_name}.jpg')
-                                img_tmp = img_tmp.crop((img_pad, img_pad, img_tmp.width - img_pad, img_tmp.height - img_pad))
-                                tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
-
-                                os.unlink(f'{style_outdir}/{output_name}.jpg')
+                        tar=get_target_img(jpg_path,device,e,d,s_tensor,c_name,s_name,style_outdir=style_outdir)
                     else:
                         print("file exists")
                         InfoNotifier.InfoNotifier.g_progress_info.append(style_output_path+'已存在，跳过')
@@ -369,7 +254,7 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                         # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
                         tar.save(style_output_path, quality=100)
                         print(f'result saved into files {style_output_path}/')
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'stylized image has saved into files: {style_output_path}')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'风格图保存到: {style_output_path}')
 
                     else:
                         print("exists")
@@ -380,6 +265,88 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
             del e
         except:
             pass
+
+
+# set device on GPU if available, else CPU
+def Device():
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        print(f'# CUDA available: {torch.cuda.get_device_name(0)}')
+    else:
+        device = 'cpu'
+    return device
+
+
+# load model
+def load_model(device):
+    # device=Device()
+    d = Decoder()
+    d.load_state_dict(torch.load(model_state_path))
+    d = d.to(device)
+    return d
+
+# get content name and file name
+
+def get_c_name_and_file_name(file_path):
+    file = os.path.basename(file_path)
+    c_name = os.path.splitext(os.path.basename(file_path))[0]
+    return file,c_name
+
+
+# get style name
+def get_style_name(style_dir):
+    s_name = os.path.splitext(os.path.basename(style_dir))[0]
+    return  s_name
+
+
+
+# get_target_img
+def get_target_img(file_path,device,e,d,s_tensor,c_name,s_name,style_outdir):
+    c = Image.open(file_path)
+    width_d = c.width // img_base
+    height_d = c.height // img_base
+    tar = Image.new('RGB', (c.width, c.height))
+
+    # print(s_name)
+
+    # 切分大图为小图
+    for i in range(width_d):
+        for j in range(height_d):
+            c_div = c.crop((i * img_base - img_pad, j * img_base - img_pad, (i + 1) * img_base + img_pad,
+                            (j + 1) * img_base + img_pad))
+
+            c_tensor = trans(c_div).unsqueeze(0).to(device)
+
+            with torch.no_grad():
+                cf = e(c_tensor)
+                sf = e(s_tensor)
+                style_swap_res = style_swap(cf, sf, patch_size, 1)
+                del cf
+                del sf
+                out = d(style_swap_res)
+
+            c_denorm = denorm(c_tensor, device)
+            out_denorm = denorm(out, device)
+            res = torch.cat([c_denorm, out_denorm], dim=0)
+            res = res.to('cpu')
+
+            output_name = f'{c_name}_{s_name}_{i}_{j}'
+            save_image(out_denorm, f'{style_outdir}/{output_name}.jpg', nrow=1)
+
+            img_tmp = Image.open(f'{style_outdir}/{output_name}.jpg')
+            img_tmp = img_tmp.crop((img_pad, img_pad, img_tmp.width - img_pad, img_tmp.height - img_pad))
+            tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
+            os.unlink(f'{style_outdir}/{output_name}.jpg')
+    return  tar
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

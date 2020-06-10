@@ -24,7 +24,7 @@ def gen_jpg_tga(file_='', work_="",dds_list=[]):
             file_real_path = a.real_dds_path()
             # file_real_path = work_ + file
             if os.path.exists(file_real_path) is False:
-                InfoNotifier.InfoNotifier.g_progress_info.append(f"{file_real_path} doesn't exist")
+                InfoNotifier.InfoNotifier.g_progress_info.append(f"{file_real_path} 不存在")
                 continue
 
 
@@ -52,7 +52,7 @@ def gen_jpg_tga(file_='', work_="",dds_list=[]):
                 # do real job
                 os.system(main_cmd)
             else:
-                print(jpg_path+' exists')
+                print(jpg_path+' 已存在，跳过')
 
     except BaseException as e:
         print(e)

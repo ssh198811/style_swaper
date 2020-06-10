@@ -33,29 +33,7 @@ class My_gen_dds_jpg_thread3(QThread):
     def gen_jpg(self):
         try:
             InfoNotifier.InfoNotifier.g_progress_info.append("开始将贴图格式转换为jpg和tga····")
-            # for file in self.show_list:
-            #     file_real_path=file
-            #
-            #     file_name = os.path.basename(file_real_path)
-            #
-            #     # 创建style_transfer目录
-            #     parent_path = os.path.dirname(file_real_path)
-            #     style_transfer_path = parent_path + "/style_transfer/"
-            #     if os.path.exists(style_transfer_path) is False:
-            #         os.makedirs(style_transfer_path)
-            #
-            #     # 创建 jpg tga
-            #     jpg_path = style_transfer_path + file_name.replace(".dds", ".jpg")
-            #     tga_path = style_transfer_path + file_name.replace(".dds", ".tga")
-            #     if os.path.exists(jpg_path) is False:
-            #         main_cmd = f"{self.exe_dir} {file_real_path} {jpg_path} {tga_path}"
-            #         main_cmd = main_cmd.replace("\n", "")
-            #         print(main_cmd)
-            #
-            #         # do real job
-            #         os.system(main_cmd)
-            #     else:
-            #         print(jpg_path+' exists')
+
             gen_jpg_tga_from_dds.gen_jpg_tga(work_=self.project_base, dds_list=self.show_list)
             InfoNotifier.InfoNotifier.g_progress_info.append("已生成jpg,tga格式图片")
             self._signal.emit()
@@ -155,9 +133,9 @@ class My_gen_style_thread3(QThread):
                 lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
                 tga_img.save(lerp_out_path, quality=100)
                 print(f"generate tga image {lerp_out_path} after lerp op.")
-                InfoNotifier.InfoNotifier.g_progress_info.append(f"generate tga image {lerp_out_path} after lerp op.")
+                InfoNotifier.InfoNotifier.g_progress_info.append(f"生成插值操作后的tga图片: {lerp_out_path} ")
             else:
-                InfoNotifier.InfoNotifier.g_progress_info.append(lerp_out_path + ' exists')
+                InfoNotifier.InfoNotifier.g_progress_info.append(lerp_out_path + ' 已存在，跳过')
             # dds
 
             # 图片目录路径
@@ -170,9 +148,9 @@ class My_gen_style_thread3(QThread):
                 os.system(main_cmd)
                 InfoNotifier.InfoNotifier.g_progress_info.append('生成DDS贴图：' + dds_out + file_name)
             else:
-                InfoNotifier.InfoNotifier.g_progress_info.append(dds_out + file_name + ' exists')
+                InfoNotifier.InfoNotifier.g_progress_info.append(dds_out + file_name + ' 已存在，跳过')
 
-        InfoNotifier.InfoNotifier.g_progress_info.append("保存完成，DDS贴图保存在各原始图片目录下dds_output文件中")
+        InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
         self._signal.emit()
 
     def run(self):
@@ -233,31 +211,7 @@ class My_gen_seamless_style_thread3(QThread):
         for file in self.content_list:
             file = file.replace("\n", "")
             file_name = os.path.basename(file)
-            # file_real_path = file
-            #
-            # parent_path = os.path.dirname(file_real_path)
-            # self.style_transfer_path = parent_path + "/style_transfer/"
-            # # parent_path+=is_seamless
-            # if os.path.exists(self.style_transfer_path) is False:
-            #     InfoNotifier.InfoNotifier.g_progress_info.append("请先将dds转化为jpg,tga格式")
-            #     return
-            #
-            # parent_path += '/style_transfer/expanded'
-            # self.expanded_transfer = parent_path + '/expanded_transfer/'
-            # self.style_output = parent_path + '/style_output/'
-            # self.lerp_output = parent_path + '/lerg_output/'
-            # self.dds_output = parent_path + '/dds_output/'
-            # self.seamless_output = parent_path + '/seamless/'
-            # if os.path.exists(self.style_output) is False:
-            #     os.makedirs(self.style_output)
-            # if os.path.exists(self.lerp_output) is False:
-            #     os.makedirs(self.lerp_output)
-            # if os.path.exists(self.dds_output) is False:
-            #     os.makedirs(self.dds_output)
-            # if os.path.exists(self.expanded_transfer) is False:
-            #     os.makedirs(self.expanded_transfer)
-            # if os.path.exists(self.seamless_output) is False:
-            #     os.makedirs(self.seamless_output)
+
             get_path = PathUtils(self.project_base, self.chosen_style_pic, file)
             jpg_path = get_path.get_expanded_jpg_path()
             tga_path = get_path.get_expanded_tga_path()
@@ -285,9 +239,9 @@ class My_gen_seamless_style_thread3(QThread):
                 lerp_out_path = lerp_out_path.replace(".jpg", ".tga")
                 tga_img.save(lerp_out_path, quality=100)
                 print(f"generate tga image {lerp_out_path} after lerp op.")
-                InfoNotifier.InfoNotifier.g_progress_info.append(f"generate tga image {lerp_out_path} after lerp op.")
+                InfoNotifier.InfoNotifier.g_progress_info.append(f"生成插值操作后的tga图片 {lerp_out_path} ")
             else:
-                InfoNotifier.InfoNotifier.g_progress_info.append(lerp_out_path + '  exists')
+                InfoNotifier.InfoNotifier.g_progress_info.append(lerp_out_path + ' 已存在，跳过')
             # seamless
             seamless_path = get_path.get_seamless_path()
             if os.path.exists(seamless_path) is False:
@@ -302,7 +256,7 @@ class My_gen_seamless_style_thread3(QThread):
                 img_crop.save(seamless_path, quality=100)
                 InfoNotifier.InfoNotifier.g_progress_info.append("生成无缝贴图：" + seamless_path)
             else:
-                InfoNotifier.InfoNotifier.g_progress_info.append(seamless_path + '   exists')
+                InfoNotifier.InfoNotifier.g_progress_info.append(seamless_path + ' 已存在，跳过')
 
             dds_output = get_path.get_seamless_dds_path()
             if os.path.exists(dds_output + file_name) is False:
@@ -313,9 +267,9 @@ class My_gen_seamless_style_thread3(QThread):
                 os.system(main_cmd)
                 InfoNotifier.InfoNotifier.g_progress_info.append('生成DDS贴图：' + dds_output + file_name)
             else:
-                InfoNotifier.InfoNotifier.g_progress_info.append(dds_output + file_name + '   exists')
+                InfoNotifier.InfoNotifier.g_progress_info.append(dds_output + file_name + ' 已存在，跳过')
 
-        InfoNotifier.InfoNotifier.g_progress_info.append("dds图片已转化完毕，保存在工程文件dds_output中")
+        InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
         self._signal.emit()
 
     def run(self):
