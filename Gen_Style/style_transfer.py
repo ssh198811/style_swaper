@@ -29,7 +29,7 @@ def denorm(tensor, device):
 
 
 # work for making temp img
-def style_main2(pics_dir=[],style_dir=''):
+def style_main2(pics_dir=[], style_dir=''):
 
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
     if pics_dir is not None:
@@ -170,7 +170,6 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
         device=Device()
 
         # set model
-
         d = load_model(device)
 
         s = Image.open(style_dir)
@@ -182,15 +181,15 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
         f=open(txt_path,"r",encoding='utf-8-sig')
 
         for file_path in f:
-            file_path=file_path.replace("\n","").replace("\\","/")
-            a=False
+            file_path=file_path.replace("\n", "").replace("\\", "/")
+            flag=False
             #判断该图片是否在选中目录中
-            for  file in chosen_content_file_list:
-                if dir_dict[file] in file_path:
-                    a=True
+            for file in chosen_content_file_list:
+                if dir_dict[file] == os.path.dirname(file_path):
+                    flag=True
                     break
 
-            if a is True:
+            if flag is True:
                 # file_path=file_path.replace("\n","")
                 # file_name=os.path.basename(file_path)
                 # file_path=work_+'/'+file_path

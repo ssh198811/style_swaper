@@ -116,7 +116,7 @@ class My_gen_style_thread2(QThread):
             a = False
             # 判断该图片是否在选中目录中
             for sub_file in self.chosen_content_file_list:
-                if self.dir_dict[sub_file] in file:
+                if self.dir_dict[sub_file] == os.path.dirname(file):
                     a = True
                     break
             if a is True:
@@ -200,7 +200,7 @@ class My_gen_seamless_thread2(QThread):
             # 判断该图片是否在选中目录中
             a = False
             for sub_file in self.chosen_content_file_list:
-                if self.dir_dict[sub_file] in file:
+                if self.dir_dict[sub_file] == os.path.dirname(file):
                     a = True
                     break
             if a is True:
@@ -254,7 +254,7 @@ class My_gen_seamless_thread2(QThread):
             # 判断该图片是否在选中目录中
             a = False
             for sub_file in self.chosen_content_file_list:
-                if self.dir_dict[sub_file] in file:
+                if self.dir_dict[sub_file] == os.path.dirname(file):
                     a = True
                     break
             if a is True:
