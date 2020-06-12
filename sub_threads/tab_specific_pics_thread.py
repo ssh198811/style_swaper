@@ -2,7 +2,6 @@
 from PyQt5 import QtWidgets,QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMenu, QMessageBox , QListWidgetItem
 from PyQt5.QtCore import pyqtSignal, QThread, Qt, QUrl, QPoint,QSize,QRect
-
 import  os
 import time
 import InfoNotifier
@@ -10,23 +9,25 @@ from PIL import Image
 import cv2
 import glob
 from Gen_Style import style_transfer
-
-import  gen_jpg_tga_from_dds
+import gen_jpg_tga_from_dds
 import json
 import gen_lerp_ret
-
 from path_util import PathUtils
 
 
-#################################################tab3
-class My_gen_dds_jpg_thread3(QThread):
+# tab3
+class MyGenDdsJpgThreadTabPics(QThread):
     _signal = pyqtSignal()
 
     def __init__(self):
-        super(My_gen_dds_jpg_thread3, self).__init__()
+        super(MyGenDdsJpgThreadTabPics, self).__init__()
         self.exe_dir = os.getcwd() + "\\dds_to_jpg/dds_to_jpg.exe"
+        self.show_list = []
+        self.project_base = ''
 
-    def set_para(self, content_list=[], project_base=''):
+    def set_para(self, content_list=None, project_base=''):
+        if content_list is None:
+            self.show_list = []
         self.show_list = content_list
         self.project_base = project_base
 
@@ -44,13 +45,18 @@ class My_gen_dds_jpg_thread3(QThread):
         self.gen_jpg()
 
 
-class My_gen_style_temp_thread3(QThread):
+class MyGenStyleTempThreadTabPics(QThread):
     _signal = pyqtSignal()
 
     def __init__(self):
-        super(My_gen_style_temp_thread3, self).__init__()
+        super(MyGenStyleTempThreadTabPics, self).__init__()
+        self.show_list = None
+        self.chosen_style_pic = ''
+        self.temp_file_name = ''
 
-    def set_para(self, show_list=[], chosen_style_pic='', temp_file=''):
+    def set_para(self, show_list=None, chosen_style_pic='', temp_file=''):
+        if show_list is None:
+            self.show_list = []
         self.show_list = show_list
         self.chosen_style_pic = chosen_style_pic
         self.temp_file_name = temp_file
@@ -58,58 +64,53 @@ class My_gen_style_temp_thread3(QThread):
     def gen_style(self):
         style_pic = self.chosen_style_pic
         content_list = self.show_list
-
         style_name = os.path.basename(style_pic).split('.')[0]
         if os.path.exists(self.temp_file_name) is False:
             os.makedirs(self.temp_file_name)
 
         """让生成过的临时文件不再重新生成"""
-        a=True
+        flag = True
         for i in range(len(content_list)):
             file_name = os.path.basename(content_list[i])
             if os.path.exists(self.temp_file_name + style_name + '/' + file_name) is False:
-                a=False
+                flag = False
+                break
             # style_main3(content_list, style_pic, self.temp_file_name)
-        if a is False:
+        if flag is False:
             style_transfer.style_main2(content_list, style_pic)
         InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
-        # else:
-        #     for file_path in content_list:
-        #         file = os.path.basename(file_path)
-        #         # style_path=
-        #         # InfoNotifier.InfoNotifier.style_preview_pic_dir3.append(f'{self.temp_file_name}{style_name}/' + file)
-        #     InfoNotifier.InfoNotifier.g_progress_info.append(self.temp_file_name + style_name + '已存在，点击一张原图进行预览')
-
-        # main(pics_dir=[], style_dir='', save_dir='')
         self._signal.emit()
 
     def run(self):
         self.gen_style()
 
 
-class My_gen_style_thread3(QThread):
+class MyGenStyleThreadTabPics(QThread):
     _signal = pyqtSignal()
 
     def __init__(self):
-        super(My_gen_style_thread3, self).__init__()
+        super(MyGenStyleThreadTabPics, self).__init__()
         self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+        self.project_base = ''
+        self.content_list = []
+        self.chosen_style_pic = ''
+        self.lerg_value = 50
 
-    def set_para(self, project_base='', content_list=[], style_path='', lerg_value=50):
+    def set_para(self, project_base='', content_list=None, style_path='', lerg_value=50):
+        if content_list is None:
+            self.content_list = []
         self.project_base = project_base
         self.content_list = content_list
         self.chosen_style_pic = style_path
         self.lerg_value = lerg_value
 
     def save_all(self):
-
-        style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
         InfoNotifier.InfoNotifier.g_progress_info.append("开始保存图片··············")
         # gen_style_batch3.style_main3(self.content_list,self.chosen_style_pic)
         style_transfer.style_main(self.content_list, self.chosen_style_pic, self.project_base, False)
         for file in self.content_list:
             file_name = os.path.basename(file)
             get_path = PathUtils(self.project_base, self.chosen_style_pic, file)
-
             jpg_path = get_path.dds_to_jpg_path()
             tga_path = get_path.dds_to_tga_path()
 
@@ -134,7 +135,6 @@ class My_gen_style_thread3(QThread):
             print(f"generate tga image {lerp_out_path} after lerp op.")
             InfoNotifier.InfoNotifier.g_progress_info.append(f"生成插值操作后的tga图片: {lerp_out_path} ")
             # dds
-
             # 图片目录路径
             dds_out = get_path.get_dds_output_path()
             if os.path.exists(dds_out) is False:
@@ -143,8 +143,6 @@ class My_gen_style_thread3(QThread):
             main_cmd.replace("\n", "")
             os.system(main_cmd)
             InfoNotifier.InfoNotifier.g_progress_info.append('生成DDS贴图：' + dds_out + file_name)
-
-
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
         self._signal.emit()
 
@@ -152,14 +150,20 @@ class My_gen_style_thread3(QThread):
         self.save_all()
 
 
-class My_gen_seamless_style_thread3(QThread):
+class MyGenSeamlessStyleThreadTabPics(QThread):
     _signal = pyqtSignal()
 
     def __init__(self):
-        super(My_gen_seamless_style_thread3, self).__init__()
+        super(MyGenSeamlessStyleThreadTabPics, self).__init__()
         self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+        self.project_base = ''
+        self.content_list = []
+        self.chosen_style_pic = ''
+        self.lerg_value = 50
 
-    def set_para(self, project_base='', content_list=[], style_path='', lerg_value=50):
+    def set_para(self, project_base='', content_list=None, style_path='', lerg_value=50):
+        if content_list is None:
+            self.content_list = []
         self.project_base = project_base
         self.content_list = content_list
         self.chosen_style_pic = style_path
@@ -199,8 +203,6 @@ class My_gen_seamless_style_thread3(QThread):
             InfoNotifier.InfoNotifier.g_progress_info.append(f'保存expand后图片：{expanded_jpg}，jpg')
 
     def save_all(self):
-        pad = 256
-        style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
         # gen_seamless_style_batch3.style_main3(self.content_list,self.chosen_style_pic)
         style_transfer.style_main(self.content_list, self.chosen_style_pic, self.project_base, True)
         for file in self.content_list:

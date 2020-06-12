@@ -1,36 +1,38 @@
-
-
-
 from PyQt5 import QtWidgets,QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMenu, QMessageBox , QListWidgetItem
 from PyQt5.QtCore import pyqtSignal, QThread, Qt, QUrl, QPoint,QSize,QRect
 from PyQt5 import QtGui
 from combocheckbox import ComboCheckBox
 from PyQt5.QtGui import QIcon, QDesktopServices,QPixmap
-import  Ui_test519
-import  os
+import Ui_test519
+import os
 import time
 import InfoNotifier
 from PIL import Image
 import cv2
 import glob
-
-from  Gen_Style import style_transfer
-
-import  gen_jpg_tga_from_dds
+from Gen_Style import style_transfer
+import gen_jpg_tga_from_dds
 import json
 import gen_lerp_ret
-
 from path_util import PathUtils
 
-#################################################tab2
-class My_gen_dds_jpg_thread2(QThread):
+
+# tab_txt
+
+class MyGenDdsJpgThreadTabTxt(QThread):
+    # 生成jpg,tga
     _signal = pyqtSignal()
 
     def __init__(self):
-        super(My_gen_dds_jpg_thread2, self).__init__()
+        super(MyGenDdsJpgThreadTabTxt, self).__init__()
+        self.file_ = ''
+        self.work_ = ''
+        self.dds_list = []
 
-    def set_para(self, file_='', work_='', dds_list=[]):
+    def set_para(self, file_='', work_='', dds_list=None):
+        if dds_list is None:
+            self.dds_list = []
         self.file_ = file_
         self.work_ = work_
         self.dds_list = dds_list
@@ -42,52 +44,51 @@ class My_gen_dds_jpg_thread2(QThread):
 
     def run(self):
         self.gen_jpg_tga()
-        # self.show_previewed_before_pic2()
 
 
-class My_gen_style_temp_thread2(QThread):
+class MyGenStyleTempThreadTabTxt(QThread):
     _signal = pyqtSignal()
 
     def __init__(self):
-        super(My_gen_style_temp_thread2, self).__init__()
+        super(MyGenStyleTempThreadTabTxt, self).__init__()
 
-    def set_para(self, show_list=[], chosen_style_pic='', temp_file=''):
+    def set_para(self, show_list=None, chosen_style_pic='', project_base=''):
+        if show_list is None:
+            self.show_list = []
         self.show_list = show_list
         self.chosen_style_pic = chosen_style_pic
         # 根目录
-        self.temp_file_name = temp_file
+        self.project_base = project_base
 
     def gen_style(self):
         style_pic = self.chosen_style_pic
         content_list = self.show_list
-        # if os.path.exists(self.temp_file_name) is False:
-        #     os.makedirs(self.temp_file_name)
-        # index=0
-        # for i in content_list:
-        #     save_temp_dir=self.temp_file_name+str(index)+'.jpg'
-        # style_name = os.path.basename(style_pic).split('.')[0]
         style_transfer.style_main2(content_list, style_pic)
         InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览")
-
         self._signal.emit()
 
     def run(self):
         self.gen_style()
 
 
-class My_gen_style_thread2(QThread):
+class MyGenStyleThreadTabTxt(QThread):
     _signal = pyqtSignal()
 
     def __init__(self):
-        super(My_gen_style_thread2, self).__init__()
+        super(MyGenStyleThreadTabTxt, self).__init__()
         self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
-
-    def set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic='', chosen_content_file_list=[],
-                 dir_dict={}):
-        # txt_file = self.txt_path
-        # work_ = self.ui.project_base_dir.text()
-        # lerp_value = self.ui.change_coe_horizontalSlider2.value()
-        # seamless = self.is_seamless_ornot2()
+        self.txt_path = ''
+        self.work_ = ''
+        self.lerg_value = 50
+        self.chosen_style_pic = ''
+        self.chosen_content_file_list = []
+        self.dir_dict = {}
+    def set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic='', chosen_content_file_list=None,
+                 dir_dict=None):
+        if chosen_content_file_list is None:
+            self.chosen_content_file_list = []
+        if dir_dict is None:
+            self.dir_dict = {}
         self.txt_path = txt_path
         self.work_ = work_
         self.lerg_value = lerg_value
@@ -95,16 +96,8 @@ class My_gen_style_thread2(QThread):
         self.chosen_content_file_list = chosen_content_file_list
         self.dir_dict = dir_dict
 
-        # self.seamless=seamless
-
     def save_all(self):
-        # if self.seamless is False:
-        #     is_seamless=''
-        # elif self.seamless is True:
-        #     is_seamless='/expanded'
-        style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
         f = open(self.txt_path, "r", encoding='utf-8-sig')
-        # f.readline()
 
         style_transfer.style_txt_main2(self.txt_path, self.work_, self.chosen_style_pic, self.chosen_content_file_list,
                                         self.dir_dict, False)
@@ -112,18 +105,18 @@ class My_gen_style_thread2(QThread):
         for file in f:
 
             file = file.replace("\n", "").replace("\\", "/")
-            get_path = PathUtils(self.work_, self.chosen_style_pic, file)
-            a = False
+
+
             # 判断该图片是否在选中目录中
+            flag = False
             for sub_file in self.chosen_content_file_list:
                 if self.dir_dict[sub_file] == os.path.dirname(file):
-                    a = True
+                    flag = True
                     break
-            if a is True:
+            if flag is True:
                 # file_real_path=self.work_+'/'+file
-                file_name = os.path.basename(file)
-
-
+                # file_name = os.path.basename(file)
+                get_path = PathUtils(self.work_, self.chosen_style_pic, file)
                 jpg_path = get_path.dds_to_jpg_path()
                 tga_path = get_path.dds_to_tga_path()
 
@@ -135,7 +128,7 @@ class My_gen_style_thread2(QThread):
                 lerp_out_path = get_path.get_jpg_lerp_path()
                 if os.path.exists(os.path.dirname(lerp_out_path)) is False:
                     os.makedirs(os.path.dirname(lerp_out_path))
-
+                # 原图不存在则跳过
                 if os.path.exists(jpg_path) is False:
                     print(jpg_path + " is not exist!")
                     continue
@@ -170,15 +163,25 @@ class My_gen_style_thread2(QThread):
         self.save_all()
 
 
-class My_gen_seamless_thread2(QThread):
+class MyGenSeamlessThreadTabTxt(QThread):
     _signal = pyqtSignal()
 
     def __init__(self):
-        super(My_gen_seamless_thread2, self).__init__()
+        super(MyGenSeamlessThreadTabTxt, self).__init__()
         self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+        self.txt_path = ''
+        self.work_ = ''
+        self.lerg_value = 50
+        self.chosen_style_pic = ''
+        self.chosen_content_file_list = []
+        self.dir_dict = {}
 
-    def set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic='', chosen_content_file_list=[],
-                 dir_dict={}):
+    def set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic='', chosen_content_file_list=None,
+                 dir_dict=None):
+        if chosen_content_file_list is None:
+            self.chosen_content_file_list = []
+        if dir_dict is None:
+            self.dir_dict = {}
         self.txt_path = txt_path
         self.work_ = work_
         self.lerg_value = lerg_value
@@ -189,35 +192,29 @@ class My_gen_seamless_thread2(QThread):
     def expanded(self):
 
         pad = 256
-        style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
         f = open(self.txt_path, "r", encoding='utf-8-sig')
-        # f.readline()
 
         for file in f:
             file = file.replace("\n", "").replace("\\", "/")
             get_path = PathUtils(self.work_, self.chosen_style_pic, file)
-
             # 判断该图片是否在选中目录中
-            a = False
+            flag = False
             for sub_file in self.chosen_content_file_list:
                 if self.dir_dict[sub_file] == os.path.dirname(file):
-                    a = True
+                    flag = True
                     break
-            if a is True:
+            if flag is True:
                 if os.path.exists(get_path.get_expanded_tga_path()) is False:
-                    file_real_path = get_path.real_dds_path()
-
 
                     jpg_path = get_path.dds_to_jpg_path()
                     tga_path = get_path.dds_to_tga_path()
-                    # expanded_save_path=get_path.GetEpandedPath()[0]
-                    ##expand
+
+                    # expand
                     img_jpg = Image.open(jpg_path)
                     img_tga = Image.open(tga_path)
                     width = img_jpg.width
                     height = img_jpg.height
                     assert width == img_tga.width and height == img_tga.height
-
                     img_jpg_pad = Image.new("RGB", (width * 3, height * 3))
                     img_tga_pad = Image.new("RGBA", (width * 3, height * 3))
                     for i in range(3):
@@ -238,30 +235,26 @@ class My_gen_seamless_thread2(QThread):
                     InfoNotifier.InfoNotifier.g_progress_info.append(get_path.get_expanded_tga_path() + ' 已存在，跳过')
 
     def save_all(self):
-        pad = 256
-        style_name = os.path.basename(self.chosen_style_pic).split('.')[0]
 
         f = open(self.txt_path, "r", encoding='utf-8-sig')
-        # f.readline()
         style_transfer.style_txt_main2(self.txt_path, self.work_, self.chosen_style_pic,
                                         self.chosen_content_file_list, self.dir_dict, True)
         # gen_style_seamless_txt.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
         # gen_style_class.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict,True)
         for file in f:
-
             file = file.replace("\n", "").replace("\\", "/")
-            get_path = PathUtils(self.work_, self.chosen_style_pic, file)
+
             # 判断该图片是否在选中目录中
-            a = False
+            flag = False
             for sub_file in self.chosen_content_file_list:
                 if self.dir_dict[sub_file] == os.path.dirname(file):
-                    a = True
+                    flag = True
                     break
-            if a is True:
-                file = file.replace("\n", "")
+
+            if flag is True:
+                get_path = PathUtils(self.work_, self.chosen_style_pic, file)
                 file_real_path = get_path.real_dds_path()
                 file_name = os.path.basename(file_real_path)
-
 
                 jpg_path = get_path.get_expanded_jpg_path()
                 tga_path = get_path.get_expanded_tga_path()
@@ -277,8 +270,10 @@ class My_gen_seamless_thread2(QThread):
                 lerp_out_path = get_path.get_expanded_lerp_path_jpg()
                 if os.path.exists(os.path.dirname(lerp_out_path)) is False:
                     os.makedirs(os.path.dirname(lerp_out_path))
+
                 lerp_ret, _ = gen_lerp_ret.lerp_img(tmp_style_in, style_out_pic_path, self.lerg_value)
                 gen_lerp_ret.write_img(lerp_ret, lerp_out_path)
+
                 # combine alpha c
                 tga_img = Image.open(tga_path)
                 jpg_img = Image.open(lerp_out_path)
@@ -303,14 +298,15 @@ class My_gen_seamless_thread2(QThread):
                 img_crop = img.crop((pad, pad, width - pad, height - pad))
                 img_crop.save(get_path.get_seamless_path(), quality=100)
                 InfoNotifier.InfoNotifier.g_progress_info.append('生成无缝贴图' + get_path.get_seamless_path())
+
                 dds_output = get_path.get_seamless_dds_path()
-                seamless_path = os.path.dirname(get_path.get_seamless_path())
                 if os.path.exists(dds_output) is False:
                     os.makedirs(dds_output)
                 main_cmd = f"{self.texconv_path} -dxt5 -file {get_path.get_seamless_path()} -outdir {dds_output}"
                 main_cmd.replace("\n", "")
                 os.system(main_cmd)
                 InfoNotifier.InfoNotifier.g_progress_info.append(f'将{dds_output}{file_name}转化为DDS格式···')
+
 
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
         self._signal.emit()

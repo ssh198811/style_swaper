@@ -7,7 +7,6 @@ from model import VGGEncoder, Decoder
 from style_swap import style_swap
 from path_util import PathUtils
 import InfoNotifier
-
 img_base = 256
 img_pad = 100
 
@@ -29,22 +28,22 @@ def denorm(tensor, device):
 
 
 # work for making temp img
-def style_main2(pics_dir=[], style_dir=''):
-
+def style_main2(pics_dir=None, style_dir=''):
+    if pics_dir is None:
+        pics_dir = []
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
     if pics_dir is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
-        device=Device()
-        #判断是否存在预览图，若都已存在则不加载模型
-        a=True
+        device = Device()
+        # 判断是否存在预览图，若都已存在则不加载模型
+        flag = True
         for pic_dir in pics_dir:
             if os.path.exists(f'{os.path.dirname(pic_dir)}/temp/{s_name}/{os.path.basename(pic_dir)}') is False:
-                a=False
-        if a is False:
-        # set model
-
+                flag = False
+                break
+        if flag is False:
+            # set model
             d = load_model(device)
-
             s = Image.open(style_dir)
             s_tensor = trans(s).unsqueeze(0).to(device)
 
@@ -52,14 +51,15 @@ def style_main2(pics_dir=[], style_dir=''):
                 if file_path.endswith(".jpg") is False:
                     continue
                 try:
-                    ##文件名
-                    file,c_name = get_c_name_and_file_name(file_path)
+                    # 文件名
+                    file, c_name = get_c_name_and_file_name(file_path)
                     s_name = get_style_name(style_dir)
 
                     if os.path.exists(
                             f'{os.path.dirname(file_path)}/temp/{s_name}/{os.path.basename(file_path)}') is False:
                         e = VGGEncoder().to(device)
-                        tar=get_target_img(file_path,device,e,d,s_tensor,c_name,s_name,style_outdir=os.path.dirname(file_path))
+                        tar = get_target_img(file_path, device, e, d, s_tensor, c_name, s_name,
+                                           style_outdir=os.path.dirname(file_path))
 
                 except RuntimeError:
                     print('Images are too large to transfer. Size under 1000 are recommended ' + file_path)
@@ -68,49 +68,51 @@ def style_main2(pics_dir=[], style_dir=''):
                 try:
                     if os.path.exists(
                             f'{os.path.dirname(file_path)}/temp/{s_name}/{os.path.basename(file_path)}') is False:
-                     # save style transfer result
+                        # save style transfer result
                         if os.path.exists(f'{os.path.dirname(file_path)}/temp/{s_name}/') is False:
                             os.makedirs(f'{os.path.dirname(file_path)}/temp/{s_name}/')
                         tar.save(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file, quality=100)
                         print(f'result saved into files{os.path.dirname(file_path)}/temp/{s_name}/' + file)
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'已生成{os.path.dirname(file_path)}/temp/{s_name}/' + file)
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'已生成{os.path.dirname(file_path)}/temp/'
+                                                                         f'{s_name}/' + file)
                     else:
 
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file+'已存在，跳过')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{os.path.dirname(file_path)}/temp/{s_name}/'
+                                                                         + file+'已存在，跳过')
 
                 except BaseException as ec:
                     print(ec)
                     InfoNotifier.InfoNotifier.g_progress_info.append(ec)
             try:
                 del e
-            except:
+            except RuntimeError:
                 pass
 
 
 # work in tab_multi_files && tab_specific_pics part
-def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
-
+def style_main(pics_dir=None, style_dir='', base_dir='', seamless=False):
+    if pics_dir is None:
+        pics_dir = []
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
     if pics_dir is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
         # set device on GPU if available, else CPU
-        device=Device()
+        device = Device()
         # 判断是否存在预览图，若都已存在则不加载模型
-        a = True
+        flag = True
         for pic_dir in pics_dir:
             if os.path.exists(f'{os.path.dirname(pic_dir)}/temp/{s_name}/{os.path.basename(pic_dir)}') is False:
-                a = False
-        if a is False:
+                flag = False
+                break
+        if flag is False:
             # set model
-
             d = load_model(device)
-
             s = Image.open(style_dir)
             s_tensor = trans(s).unsqueeze(0).to(device)
 
             for file_path in pics_dir:
-                file_path.replace("\\","/")
-                get_path=PathUtils(base_dir,style_dir,file_path)
+                file_path.replace("\\", "/")
+                get_path = PathUtils(base_dir, style_dir, file_path)
                 if seamless is False:
                     jpg_path=get_path.dds_to_jpg_path()
                     style_output=get_path.get_style_path()
@@ -123,9 +125,8 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
                 if jpg_path.endswith(".jpg") is False:
                     continue
                 try:
-
-                    ##文件名
-                    # # file=os.path.basename(jpg_path)
+                    # 文件名
+                    # file=os.path.basename(jpg_path)
                     # c_name = os.path.splitext(os.path.basename(jpg_path))[0]
                     # s_name = os.path.splitext(os.path.basename(style_dir))[0]
                     file, c_name = get_c_name_and_file_name(jpg_path)
@@ -133,7 +134,7 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
                     print(s_name)
                     if os.path.exists(style_output) is False :
                         e = VGGEncoder().to(device)
-                        tar = get_target_img(jpg_path,device,e,d,s_tensor,c_name,s_name,style_outdir=save_dir)
+                        tar = get_target_img(jpg_path, device, e, d, s_tensor, c_name, s_name, style_outdir=save_dir)
                     else:
                         print("file exists")
                         InfoNotifier.InfoNotifier.g_progress_info.append(get_path.get_style_path() + '已存在，跳过')
@@ -142,7 +143,7 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
 
                 try:
                     if os.path.exists(style_output) is False:
-                         # save style transfer result
+                        # save style transfer result
                         if os.path.exists(os.path.dirname(style_output)) is False:
                             os.makedirs(os.path.dirname(style_output))
 
@@ -157,36 +158,34 @@ def style_main(pics_dir=[],style_dir='',base_dir='',seamless=False):
                     print(ec)
                 try:
                     del e
-                except:
+                except RuntimeError:
                     pass
 
 
 # work in tab_txt part
-def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[],dir_dict={},seamless=False):
-
+def style_txt_main2(txt_path='', work_='', style_dir='', chosen_content_file_list=None, dir_dict=None, seamless=False):
+    if chosen_content_file_list is None:
+        chosen_content_file_list = []
+    if dir_dict is None:
+        dir_dict = {}
     if os.path.exists(txt_path) is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
         # set device on GPU if available, else CPU
-        device=Device()
-
+        device = Device()
         # set model
         d = load_model(device)
-
         s = Image.open(style_dir)
         s_tensor = trans(s).unsqueeze(0).to(device)
-
-
-        #read txt
+        # read txt
         # style_name=os.path.basename(style_dir).split('.')[0]
-        f=open(txt_path,"r",encoding='utf-8-sig')
-
+        f = open(txt_path, "r", encoding='utf-8-sig')
         for file_path in f:
-            file_path=file_path.replace("\n", "").replace("\\", "/")
-            flag=False
-            #判断该图片是否在选中目录中
+            file_path = file_path.replace("\n", "").replace("\\", "/")
+            flag = False
+            # 判断该图片是否在选中目录中
             for file in chosen_content_file_list:
                 if dir_dict[file] == os.path.dirname(file_path):
-                    flag=True
+                    flag = True
                     break
 
             if flag is True:
@@ -211,7 +210,6 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                 else:
                     style_output_path=get_path.get_expanded_style_path()
 
-
                 style_outdir=os.path.dirname(os.path.dirname(style_output_path))
                 if os.path.exists(style_outdir) is False:
                     os.makedirs(style_outdir)
@@ -219,7 +217,7 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                 if jpg_path.endswith(".jpg") is False:
                     continue
                 try:
-                    ##文件名
+                    # 文件名
                     # # file = os.path.basename(jpg_path)
                     # c_name = os.path.splitext(os.path.basename(jpg_path))[0]
                     # s_name = os.path.splitext(os.path.basename(style_dir))[0]
@@ -229,7 +227,7 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
 
                         # if os.path.exists(f'{style_outdir}{s_name}/' + file) is False:
                         e = VGGEncoder().to(device)
-                        tar=get_target_img(jpg_path,device,e,d,s_tensor,c_name,s_name,style_outdir=style_outdir)
+                        tar=get_target_img(jpg_path, device, e, d, s_tensor, c_name, s_name, style_outdir=style_outdir)
                     else:
                         print("file exists")
                         InfoNotifier.InfoNotifier.g_progress_info.append(style_output_path+'已存在，跳过')
@@ -240,17 +238,9 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
 
                 try:
                     if os.path.exists(style_output_path) is False:
-                         # save style transfer result
+                        # save style transfer result
                         if os.path.exists(os.path.dirname(style_output_path)) is False:
                             os.makedirs(os.path.dirname(style_output_path))
-
-                            # tga_img = Image.open(content_dir + file.replace('.jpg', '.tga'))
-                            # ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
-                            # ir, ig, ib = tar.split()
-                            # tga_img = Image.merge('RGBA', (ir, ig, ib, ia))
-                        # file=file.replace("style_transfer/","")
-                        # print(f'save_path:{style_outdir};file:{file}')
-                        # if os.path.exists(f'{save_dir}{s_name}/{content_name}/') is False
                         tar.save(style_output_path, quality=100)
                         print(f'result saved into files {style_output_path}/')
                         InfoNotifier.InfoNotifier.g_progress_info.append(f'风格图保存到: {style_output_path}')
@@ -262,7 +252,7 @@ def style_txt_main2(txt_path='',work_='',style_dir='',chosen_content_file_list=[
                     InfoNotifier.InfoNotifier.g_progress_info.append('error when saving stylized image')
         try:
             del e
-        except:
+        except RuntimeError:
             pass
 
 
@@ -288,13 +278,13 @@ def load_model(device):
 def get_c_name_and_file_name(file_path):
     file = os.path.basename(file_path)
     c_name = os.path.splitext(os.path.basename(file_path))[0]
-    return file,c_name
+    return file, c_name
 
 
 # get style name
 def get_style_name(style_dir):
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
-    return  s_name
+    return s_name
 
 
 # get_target_img
@@ -335,15 +325,6 @@ def get_target_img(file_path, device, e, d, s_tensor, c_name, s_name, style_outd
             tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
             os.unlink(f'{style_outdir}/{output_name}.jpg')
     return tar
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

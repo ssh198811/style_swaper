@@ -22,11 +22,11 @@ exe = EXE(pyz,
           [],
           exclude_binaries=True,
           name='Style_Swap',
-          debug=False,
+          debug=True,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False)
+          console=True)
 
 coll = COLLECT(exe,
                a.binaries,

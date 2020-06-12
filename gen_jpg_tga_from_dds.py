@@ -10,12 +10,12 @@ file_path = "稻香村.txt"
 exe_dir = os.getcwd() + "\\dds_to_jpg/dds_to_jpg.exe"
 
 
-def gen_jpg_tga(file_='', work_="", dds_list=[]):
+def gen_jpg_tga(file_='', work_="", dds_list=None):
     try:
-
+        if dds_list is None:
+            dds_list = []
         # f = open(file_, "r", encoding='utf-8-sig')
         # f.readline()
-
         for file in dds_list:
             file = file.replace("\n", "")
             # 实例化

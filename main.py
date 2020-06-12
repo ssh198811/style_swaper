@@ -1,4 +1,3 @@
-
 from PyQt5 import QtWidgets,QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMenu, QMessageBox , QListWidgetItem
 from PyQt5.QtCore import pyqtSignal, QThread, Qt, QUrl, QPoint,QSize,QRect
@@ -60,8 +59,6 @@ if __name__=='__main__':
             self.combocheckBox2.setStyleSheet("background-color: rgb(90, 90, 90);\n"
                                               "color: rgb(0, 0, 0);")
             self.combocheckBox2.setEnabled(False)
-
-
 
             # 预览图片数
             self.preview_num=3
@@ -135,6 +132,7 @@ if __name__=='__main__':
             self.ui.pic_style_listWidget3.clicked.connect(self.pic_style_clicked_tab_pics)
             self.ui.change_coe_horizontalSlider3.valueChanged.connect(self.preview_after_pic_in_label_tab_pics)
             self.ui.savePic_button3.clicked.connect(self.save_all_tab_pics)
+
         # 更新日志
         def update_progress_info(self):
             for info in InfoNotifier.InfoNotifier.g_progress_info:
@@ -153,6 +151,12 @@ if __name__=='__main__':
             self.ui.project_base_dir.setText(directory)
             with open('./base_dir_log.txt', 'w')as f:
                 f.write(f"{directory}\n")
+
+        # 查看图片通道数
+        def get_channel_num(self, img_path=''):
+            if img_path != '':
+                img = Image.open(img_path)
+                return len(img.split())
 
         # tab_files
         # 多选文件导入
@@ -182,7 +186,7 @@ if __name__=='__main__':
             # 选择风格图
             self.ui.pic_style_listWidget1.clear()
             # InfoNotifier.InfoNotifier.style_preview_pic_dir.clear()
-            files, filetype = QFileDialog.getOpenFileNames(self, "选择文件", "./", "JPG文件(*.jpg);;PNG文件(*.png)")
+            files, filetype = QFileDialog.getOpenFileNames(self, "选择文件", "./", "JPG文件(*.jpg)")
             if len(files) == 0:
                 style_img_icon = []
                 for pic in self.Choosed_style_pics_list:
@@ -203,13 +207,43 @@ if __name__=='__main__':
                 self.ui.pic_style_listWidget1.setIconSize(iconsize)
 
                 QApplication.processEvents()
+
             else:
                 pic_dir = ""
                 for file in files:
-                    pic_dir += file + ';;'
+                    #如果图片不是三通道，跳过
+                    if self.get_channel_num(file) != 3:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(file+' 为四通道图片，请选择三通道jpg格式图片！')
+                    elif file in self.Choosed_style_pics_list:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(file+' 已选过')
+                    else:
+                        pic_dir += file + ';;'
+                # print(pic_dir)
+                if pic_dir == '':
+                    style_img_icon = []
+                    for pic in self.Choosed_style_pics_list:
+                        pix = QPixmap(pic)
+                        icon = QIcon()
+                        icon.addPixmap(pix)
+                        style_img_icon.append(icon)
+                    index = 0
+                    while index < len(self.Choosed_style_pics_list):
+                        item = QListWidgetItem()
+                        item.setIcon(style_img_icon[index])
+                        item.setSizeHint(QSize(100, 100))
+                        item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+
+                        self.ui.pic_style_listWidget1.addItem(item)
+                        index += 1
+                    iconsize = QSize(100, 100)
+                    self.ui.pic_style_listWidget1.setIconSize(iconsize)
+
+                    QApplication.processEvents()
+                    return
+
                 pic_dir = pic_dir[:-2]
 
-                pic_dir=pic_dir.split(";;")
+                pic_dir = pic_dir.split(";;")
                 for i in pic_dir:
                     self.Choosed_style_pics_list.append(i)
                 print(self.Choosed_style_pics_list)
@@ -391,12 +425,13 @@ if __name__=='__main__':
 
                 self.is_seamless = self.is_seamless_ornot()
                 if self.is_seamless is False:
-                    self.save_style_thread = tab_multi_files_thread.My_gen_style_thread()
+                    self.save_style_thread = tab_multi_files_thread.MyGenStyleThreadTabFiles()
                     self.save_style_thread.set_para(style_path, chosen_content_file_list, base, file_dict, lerp_value)
                     self.save_style_thread.start()
                 elif self.is_seamless is True:
-                    self.sava_sceamless_style_style = tab_multi_files_thread.My_gen_seamless_style_thread()
-                    self.sava_sceamless_style_style.set_para(style_path, chosen_content_file_list, base, file_dict, lerp_value)
+                    self.sava_sceamless_style_style = tab_multi_files_thread.MyGenSeamlessStyleThreadTabFiles()
+                    self.sava_sceamless_style_style.set_para(style_path, chosen_content_file_list, base, file_dict,
+                                                             lerp_value)
                     self.sava_sceamless_style_style.start()
             except BaseException as be:
                 print(be)
@@ -445,7 +480,7 @@ if __name__=='__main__':
                     # print(parent_path)
                     file_split = parent_path.split("/")
 
-                    # 过滤出 XXX/baked，XXX/env_probe,XXX/landscape/procedural 路径
+                    # 过滤出 XXX/baked;XXX/env_probe;XXX/landscape/procedural 路径
                     if len(file_split) >= 3:
                         if file_split[-1] == 'baked' and file_split[-3] == 'maps':
                             self.pics_path_array.append(file_path)
@@ -487,7 +522,7 @@ if __name__=='__main__':
                 # 带转换的图片列表
                 dds_list = self.pics_path_array
 
-                self.my_dds_thread = tab_txt_thread.My_gen_dds_jpg_thread2()
+                self.my_dds_thread = tab_txt_thread.MyGenDdsJpgThreadTabTxt()
                 self.my_dds_thread.set_para(file, work_, dds_list)
                 self.my_dds_thread.start()
             except BaseException as be:
@@ -564,7 +599,7 @@ if __name__=='__main__':
 
         def choose_style_pics_tab_txt(self):
             self.ui.pic_style_listWidget2.clear()
-            files, filetype = QFileDialog.getOpenFileNames(self, "选择文件", "./", "JPG文件(*.jpg);;PNG文件(*.png)")
+            files, filetype = QFileDialog.getOpenFileNames(self, "选择文件", "./", "JPG文件(*.jpg)")
             if len(files) == 0:
                 style_img_icon = []
                 for pic in self.Choosed_style_pics_list2:
@@ -588,7 +623,36 @@ if __name__=='__main__':
             else:
                 pic_dir = ""
                 for file in files:
-                    pic_dir += file + ';;'
+                    # 如果图片不是三通道，跳过
+                    if self.get_channel_num(file) != 3:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(file + ' 为四通道图片，请选择三通道jpg格式图片！')
+                    elif file in self.Choosed_style_pics_list2:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(file + ' 已选过')
+                    else:
+                        pic_dir += file + ';;'
+                # 如过滤后无图片需要载入，则重载之前选中的图片
+                if pic_dir == '':
+                    style_img_icon = []
+                    for pic in self.Choosed_style_pics_list2:
+                        pix = QPixmap(pic.replace("\n", ""))
+                        icon = QIcon()
+                        icon.addPixmap(pix)
+                        style_img_icon.append(icon)
+                    index = 0
+                    while index < len(self.Choosed_style_pics_list2):
+                        item = QListWidgetItem()
+                        item.setIcon(style_img_icon[index])
+                        item.setSizeHint(QSize(100, 100))
+                        item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+
+                        self.ui.pic_style_listWidget2.addItem(item)
+                        index += 1
+                    iconsize = QSize(100, 100)
+                    self.ui.pic_style_listWidget2.setIconSize(iconsize)
+
+                    QApplication.processEvents()
+                    return
+
                 pic_dir = pic_dir[:-2]
 
                 pic_dir = pic_dir.split(";;")
@@ -633,7 +697,7 @@ if __name__=='__main__':
                 preview_file_list = self.tmp_list
                 if len(preview_file_list) == 0:
                     return
-                self.mythread_temp = tab_txt_thread.My_gen_style_temp_thread2()
+                self.mythread_temp = tab_txt_thread.MyGenStyleTempThreadTabTxt()
                 self.mythread_temp.set_para(preview_file_list, self.chosen_style_pic2, self.ui.project_base_dir.text())
                 self.mythread_temp.start()
             except BaseException as be:
@@ -691,19 +755,18 @@ if __name__=='__main__':
                 chosen_content_file_list = self.combocheckBox1.Selectlist()
 
                 if seamless is False:
-                    self.mythread3 = tab_txt_thread.My_gen_style_thread2()
+                    self.mythread3 = tab_txt_thread.MyGenStyleThreadTabTxt()
                     self.mythread3.set_para(txt_file, work_, lerp_value, chosen_style_pic, chosen_content_file_list,
                                             self.dir_dict)
                     self.mythread3.start()
                 else:
-                    self.mythread3 = tab_txt_thread.My_gen_seamless_thread2()
+                    self.mythread3 = tab_txt_thread.MyGenSeamlessThreadTabTxt()
                     self.mythread3.set_para(txt_file, work_, lerp_value, chosen_style_pic, chosen_content_file_list,
                                             self.dir_dict)
                     self.mythread3.start()
             except BaseException as b:
                 print(b)
 
-        #tab3
         # tab_pics
         def choose_multi_pics(self):
             if self.ui.project_base_dir.text() == '':
@@ -722,7 +785,7 @@ if __name__=='__main__':
         def gen_jpg_tga_tab_pics(self):
             self.ui.choose_pics_button3.setEnabled(False)
             self.base = self.ui.project_base_dir.text()
-            self.mythread_gen = tab_specific_pics_thread.My_gen_dds_jpg_thread3()
+            self.mythread_gen = tab_specific_pics_thread.MyGenDdsJpgThreadTabPics()
             self.mythread_gen.set_para(self.chosen_content_list3, self.ui.project_base_dir.text())
             self.mythread_gen.start()
 
@@ -777,7 +840,7 @@ if __name__=='__main__':
 
         def choose_style_pics_tab_pics(self):
             self.ui.pic_style_listWidget3.clear()
-            files, filetype = QFileDialog.getOpenFileNames(self, "选择文件", "./", "JPG文件(*.jpg);;PNG文件(*.png)")
+            files, filetype = QFileDialog.getOpenFileNames(self, "选择文件", "./", "JPG文件(*.jpg)")
             if len(files) == 0:
                 style_img_icon = []
                 for pic in self.Choosed_style_pics_list3:
@@ -800,7 +863,35 @@ if __name__=='__main__':
             else:
                 pic_dir = ""
                 for file in files:
-                    pic_dir += file + ';;'
+                    # 如果图片不是三通道，跳过
+                    if self.get_channel_num(file) != 3:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(file + ' 为四通道图片，请选择三通道jpg格式图片！')
+                    elif file in self.Choosed_style_pics_list3:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(file + ' 已选过')
+                    else:
+                        pic_dir += file + ';;'
+                # 如过滤后无图片需要载入，则重载之前选中的图片
+                if pic_dir == '':
+                    style_img_icon = []
+                    for pic in self.Choosed_style_pics_list3:
+                        pix = QPixmap(pic.replace("\n", ""))
+                        icon = QIcon()
+                        icon.addPixmap(pix)
+                        style_img_icon.append(icon)
+                    index = 0
+                    while index < len(self.Choosed_style_pics_list3):
+                        item = QListWidgetItem()
+                        item.setIcon(style_img_icon[index])
+                        item.setSizeHint(QSize(100, 100))
+                        item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                        self.ui.pic_style_listWidget3.addItem(item)
+                        index += 1
+                    iconsize = QSize(100, 100)
+                    self.ui.pic_style_listWidget3.setIconSize(iconsize)
+
+                    QApplication.processEvents()
+                    return
+
                 pic_dir = pic_dir[:-2]
 
                 pic_dir = pic_dir.split(";;")
@@ -860,7 +951,7 @@ if __name__=='__main__':
                     parent_tmp = os.path.dirname(tmp_file)
                     tem_file = parent_tmp + '/temp/'
                     self.tem_file = tem_file
-                    self.mythread_temp3 = tab_specific_pics_thread.My_gen_style_temp_thread3()
+                    self.mythread_temp3 = tab_specific_pics_thread.MyGenStyleTempThreadTabPics()
                     self.mythread_temp3.set_para(preview_file_list, self.chosen_style_pic3, tem_file)
                     self.mythread_temp3.start()
             except BaseException as be:
@@ -904,11 +995,11 @@ if __name__=='__main__':
             lerp_value = self.ui.change_coe_horizontalSlider3.value()
             seamless = self.is_seamless_ornot_tab_pics()
             if seamless is False:
-                self.mythread_save3 = tab_specific_pics_thread.My_gen_style_thread3()
+                self.mythread_save3 = tab_specific_pics_thread.MyGenStyleThreadTabPics()
                 self.mythread_save3.set_para(self.ui.project_base_dir.text(), content_list, style_path, lerp_value)
                 self.mythread_save3.start()
             else:
-                self.mythread_save3 = tab_specific_pics_thread.My_gen_seamless_style_thread3()
+                self.mythread_save3 = tab_specific_pics_thread.MyGenSeamlessStyleThreadTabPics()
                 self.mythread_save3.set_para(self.ui.project_base_dir.text(), content_list, style_path, lerp_value)
                 self.mythread_save3.start()
 
