@@ -13,7 +13,7 @@ import gen_jpg_tga_from_dds
 import json
 import gen_lerp_ret
 from path_util import PathUtils
-
+from button_state import GlobalConfig
 
 # tab3
 class MyGenDdsJpgThreadTabPics(QThread):
@@ -62,6 +62,8 @@ class MyGenStyleTempThreadTabPics(QThread):
         self.temp_file_name = temp_file
 
     def gen_style(self):
+        GlobalConfig.b_sync_block_in_thread_temp = True
+        QApplication.processEvents()
         style_pic = self.chosen_style_pic
         content_list = self.show_list
         style_name = os.path.basename(style_pic).split('.')[0]
@@ -77,8 +79,9 @@ class MyGenStyleTempThreadTabPics(QThread):
                 break
             # style_main3(content_list, style_pic, self.temp_file_name)
         if flag is False:
-            style_transfer.style_main2(content_list, style_pic)
+            style_transfer.style_main_temp(content_list, style_pic)
         InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
+        GlobalConfig.b_sync_block_in_thread_temp = False
         self._signal.emit()
 
     def run(self):
@@ -105,6 +108,8 @@ class MyGenStyleThreadTabPics(QThread):
         self.lerg_value = lerg_value
 
     def save_all(self):
+        GlobalConfig.b_sync_block_op_in_progress = True
+        QApplication.processEvents()
         InfoNotifier.InfoNotifier.g_progress_info.append("开始保存图片··············")
         # gen_style_batch3.style_main3(self.content_list,self.chosen_style_pic)
         style_transfer.style_main(self.content_list, self.chosen_style_pic, self.project_base, False)
@@ -144,6 +149,7 @@ class MyGenStyleThreadTabPics(QThread):
             os.system(main_cmd)
             InfoNotifier.InfoNotifier.g_progress_info.append('生成DDS贴图：' + dds_out + file_name)
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
+        GlobalConfig.b_sync_block_op_in_progress = False
         self._signal.emit()
 
     def run(self):
@@ -171,6 +177,8 @@ class MyGenSeamlessStyleThreadTabPics(QThread):
 
     def expanded(self):
         InfoNotifier.InfoNotifier.g_progress_info.append("开始保存图片··············")
+        GlobalConfig.b_sync_block_op_in_progress = True
+        QApplication.processEvents()
         pad = 256
         for file in self.content_list:
             get_path = PathUtils(self.project_base, self.chosen_style_pic, file)
@@ -256,6 +264,7 @@ class MyGenSeamlessStyleThreadTabPics(QThread):
             InfoNotifier.InfoNotifier.g_progress_info.append('生成DDS贴图：' + dds_output + file_name)
 
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
+        GlobalConfig.b_sync_block_op_in_progress = False
         self._signal.emit()
 
     def run(self):

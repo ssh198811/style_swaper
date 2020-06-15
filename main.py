@@ -4,8 +4,8 @@ from PyQt5.QtCore import pyqtSignal, QThread, Qt, QUrl, QPoint,QSize,QRect
 from PyQt5 import QtGui
 from combocheckbox import ComboCheckBox
 from PyQt5.QtGui import QIcon, QDesktopServices,QPixmap
-import  Ui_test519
-import  os
+import Ui_test519
+import os
 import time
 import InfoNotifier
 from PIL import Image
@@ -13,7 +13,7 @@ import cv2
 import glob
 import json
 import gen_lerp_ret
-
+from  button_state import GlobalConfig
 from path_util import PathUtils, PathTemp
 from sub_threads import tab_multi_files_thread,tab_specific_pics_thread,tab_txt_thread
 from gen_style_map import gen_style_map_file
@@ -40,6 +40,7 @@ if __name__=='__main__':
 
     class MainWindow(QMainWindow):
         def __init__(self):
+
             super(MainWindow, self).__init__()
             self.ui = Ui_test519.Ui_MainWindow()
             self.ui.setupUi(self)
@@ -75,6 +76,7 @@ if __name__=='__main__':
 
             self.Thread = Mythread()
             self.Thread._signal_progress_info.connect(self.update_progress_info)
+            self.Thread._signal_button_ctrl.connect(self.update_button_state)
             self.Thread.start()
 
             self.ui.pic_before_listWidget1.setFlow(QtWidgets.QListView.LeftToRight)
@@ -141,6 +143,54 @@ if __name__=='__main__':
                 InfoNotifier.InfoNotifier.g_progress_info.clear()
             except BaseException as e:
                 print(e)
+        # 控制控件
+        def update_button_state(self):
+            if GlobalConfig.b_sync_block_op_in_progress is True:
+                # self.ui.txt.setEnabled(False)
+                # self.ui.t1.setEnabled(False)
+                # self.ui.pics.setEnabled(False)
+                self.ui.make_project_dir_button.setEnabled(False)
+                self.ui.project_base_dir.setEnabled(False)
+                self.ui.choose_pic_multi_file_dir_button1.setEnabled(False)
+                self.ui.Preview_button.setEnabled(False)
+                self.ui.choose_pic_style_button1.setEnabled(False)
+                self.ui.savePic_button1.setEnabled(False)
+                self.ui.choose_pic_txt_button2.setEnabled(False)
+                self.ui.gen_jpg_tga_button2.setEnabled(False)
+                self.ui.choose_pic_style_button2.setEnabled(False)
+                self.ui.savePic_button2.setEnabled(False)
+                self.ui.choose_pics_button3.setEnabled(False)
+                self.ui.pushButton.setEnabled(False)
+                self.ui.choose_pic_style_button2_2.setEnabled(False)
+                self.ui.savePic_button3.setEnabled(False)
+
+            if GlobalConfig.b_sync_block_op_in_progress is False:
+                # self.ui.txt.setEnabled(True)
+                # self.ui.t1.setEnabled(True)
+                # self.ui.pics.setEnabled(True)
+                self.ui.make_project_dir_button.setEnabled(True)
+                self.ui.make_project_dir_button.setEnabled(True)
+                self.ui.project_base_dir.setEnabled(True)
+                self.ui.choose_pic_multi_file_dir_button1.setEnabled(True)
+                self.ui.Preview_button.setEnabled(True)
+                self.ui.choose_pic_style_button1.setEnabled(True)
+                self.ui.savePic_button1.setEnabled(True)
+                self.ui.choose_pic_txt_button2.setEnabled(True)
+                self.ui.gen_jpg_tga_button2.setEnabled(True)
+                self.ui.choose_pic_style_button2.setEnabled(True)
+                self.ui.savePic_button2.setEnabled(True)
+                self.ui.choose_pics_button3.setEnabled(True)
+                self.ui.pushButton.setEnabled(True)
+                self.ui.choose_pic_style_button2_2.setEnabled(True)
+                self.ui.savePic_button3.setEnabled(True)
+            if GlobalConfig.b_sync_block_in_thread_temp is True:
+                self.ui.pic_style_listWidget1.setEnabled(False)
+                self.ui.pic_style_listWidget2.setEnabled(False)
+                self.ui.pic_style_listWidget3.setEnabled(False)
+            if GlobalConfig.b_sync_block_in_thread_temp is False:
+                self.ui.pic_style_listWidget1.setEnabled(True)
+                self.ui.pic_style_listWidget2.setEnabled(True)
+                self.ui.pic_style_listWidget3.setEnabled(True)
 
         def ui_update_progress_info(self, info=""):
             self.ui.progress_Info.append(info)
@@ -1006,6 +1056,7 @@ if __name__=='__main__':
             return True
 
         def save_all_tab_pics(self):
+
             style_path = self.chosen_style_pic3
             content_list = self.chosen_content_list3
             lerp_value = self.ui.change_coe_horizontalSlider3.value()

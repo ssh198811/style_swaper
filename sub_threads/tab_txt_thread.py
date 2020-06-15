@@ -16,7 +16,7 @@ import gen_jpg_tga_from_dds
 import json
 import gen_lerp_ret
 from path_util import PathUtils
-
+from button_state import GlobalConfig
 
 # tab_txt
 
@@ -61,10 +61,13 @@ class MyGenStyleTempThreadTabTxt(QThread):
         self.project_base = project_base
 
     def gen_style(self):
+        GlobalConfig.b_sync_block_in_thread_temp = True
+        QApplication.processEvents()
         style_pic = self.chosen_style_pic
         content_list = self.show_list
-        style_transfer.style_main2(content_list, style_pic)
+        style_transfer.style_main_temp(content_list, style_pic)
         InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览")
+        GlobalConfig.b_sync_block_in_thread_temp = False
         self._signal.emit()
 
     def run(self):
@@ -83,6 +86,7 @@ class MyGenStyleThreadTabTxt(QThread):
         self.chosen_style_pic = ''
         self.chosen_content_file_list = []
         self.dir_dict = {}
+
     def set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic='', chosen_content_file_list=None,
                  dir_dict=None):
         if chosen_content_file_list is None:
@@ -97,9 +101,11 @@ class MyGenStyleThreadTabTxt(QThread):
         self.dir_dict = dir_dict
 
     def save_all(self):
+        GlobalConfig.b_sync_block_op_in_progress = True
+        QApplication.processEvents()
         f = open(self.txt_path, "r", encoding='utf-8-sig')
 
-        style_transfer.style_txt_main2(self.txt_path, self.work_, self.chosen_style_pic, self.chosen_content_file_list,
+        style_transfer.style_main_txt(self.txt_path, self.work_, self.chosen_style_pic, self.chosen_content_file_list,
                                         self.dir_dict, False)
         # style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
         for file in f:
@@ -157,6 +163,7 @@ class MyGenStyleThreadTabTxt(QThread):
                 except BaseException as bec:
                     InfoNotifier.InfoNotifier.g_progress_info.append(bec)
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
+        GlobalConfig.b_sync_block_op_in_progress = False
         self._signal.emit()
 
     def run(self):
@@ -190,7 +197,8 @@ class MyGenSeamlessThreadTabTxt(QThread):
         self.dir_dict = dir_dict
 
     def expanded(self):
-
+        GlobalConfig.b_sync_block_op_in_progress = True
+        QApplication.processEvents()
         pad = 256
         f = open(self.txt_path, "r", encoding='utf-8-sig')
 
@@ -237,7 +245,7 @@ class MyGenSeamlessThreadTabTxt(QThread):
     def save_all(self):
 
         f = open(self.txt_path, "r", encoding='utf-8-sig')
-        style_transfer.style_txt_main2(self.txt_path, self.work_, self.chosen_style_pic,
+        style_transfer.style_main_txt(self.txt_path, self.work_, self.chosen_style_pic,
                                         self.chosen_content_file_list, self.dir_dict, True)
         # gen_style_seamless_txt.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict)
         # gen_style_class.style_txt_main2(self.txt_path,self.work_,self.chosen_style_pic,self.chosen_content_file_list,self.dir_dict,True)
@@ -309,6 +317,7 @@ class MyGenSeamlessThreadTabTxt(QThread):
 
 
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
+        GlobalConfig.b_sync_block_op_in_progress = False
         self._signal.emit()
 
     def run(self):

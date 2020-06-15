@@ -28,7 +28,8 @@ def denorm(tensor, device):
 
 
 # work for making temp img
-def style_main2(pics_dir=None, style_dir=''):
+def style_main_temp(pics_dir=None, style_dir=''):
+    e_used = False
     if pics_dir is None:
         pics_dir = []
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
@@ -61,6 +62,7 @@ def style_main2(pics_dir=None, style_dir=''):
                     style_output = get_path.get_temp_after_jpg_path()
                     if os.path.exists(style_output) is False:
                         e = VGGEncoder().to(device)
+                        e_used = True
                         tar = get_target_img(file_path, device, e, d, s_tensor, c_name, s_name,
                                            style_outdir=os.path.dirname(file_path))
 
@@ -84,13 +86,15 @@ def style_main2(pics_dir=None, style_dir=''):
                     print(ec)
                     InfoNotifier.InfoNotifier.g_progress_info.append(ec)
             try:
-                del e
+                if e_used is True:
+                    del e
             except RuntimeError:
                 pass
 
 
 # work in tab_multi_files && tab_specific_pics part
 def style_main(pics_dir=None, style_dir='', base_dir='', seamless=False):
+    e_used=False
     if pics_dir is None:
         pics_dir = []
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
@@ -115,12 +119,12 @@ def style_main(pics_dir=None, style_dir='', base_dir='', seamless=False):
                 file_path.replace("\\", "/")
                 get_path = PathUtils(base_dir, style_dir, file_path)
                 if seamless is False:
-                    jpg_path=get_path.dds_to_jpg_path()
-                    style_output=get_path.get_style_path()
+                    jpg_path = get_path.dds_to_jpg_path()
+                    style_output = get_path.get_style_path()
                 else:
                     jpg_path = get_path.get_expanded_jpg_path()
                     style_output = get_path.get_expanded_style_path()
-                save_dir=os.path.dirname(os.path.dirname(style_output))
+                save_dir = os.path.dirname(os.path.dirname(style_output))
                 if os.path.exists(save_dir) is False:
                     os.makedirs(save_dir)
                 if jpg_path.endswith(".jpg") is False:
@@ -133,8 +137,9 @@ def style_main(pics_dir=None, style_dir='', base_dir='', seamless=False):
                     file, c_name = get_c_name_and_file_name(jpg_path)
                     s_name = get_style_name(style_dir)
                     print(s_name)
-                    if os.path.exists(style_output) is False :
+                    if os.path.exists(style_output) is False:
                         e = VGGEncoder().to(device)
+                        e_used = True
                         tar = get_target_img(jpg_path, device, e, d, s_tensor, c_name, s_name, style_outdir=save_dir)
                     else:
                         print("file exists")
@@ -157,14 +162,16 @@ def style_main(pics_dir=None, style_dir='', base_dir='', seamless=False):
                         InfoNotifier.InfoNotifier.g_progress_info.append(style_output+' 已存在，跳过')
                 except BaseException as ec:
                     print(ec)
-                try:
+            try:
+                if e_used is True:
                     del e
-                except RuntimeError:
-                    pass
+            except RuntimeError:
+                pass
 
 
 # work in tab_txt part
-def style_txt_main2(txt_path='', work_='', style_dir='', chosen_content_file_list=None, dir_dict=None, seamless=False):
+def style_main_txt(txt_path='', work_='', style_dir='', chosen_content_file_list=None, dir_dict=None, seamless=False):
+    e_used=False
     if chosen_content_file_list is None:
         chosen_content_file_list = []
     if dir_dict is None:
@@ -188,13 +195,12 @@ def style_txt_main2(txt_path='', work_='', style_dir='', chosen_content_file_lis
                 if dir_dict[file] == os.path.dirname(file_path):
                     flag = True
                     break
-
             if flag is True:
                 # file_path=file_path.replace("\n","")
                 # file_name=os.path.basename(file_path)
                 # file_path=work_+'/'+file_path
                 # parent_path=os.path.dirname(file_path)
-                get_path = PathUtils(work_,style_dir,file_path)
+                get_path = PathUtils(work_, style_dir, file_path)
                 # get_path.work_ = work_
                 # get_path.style_path = style_dir
                 # get_path.dds_path=file_path
@@ -228,6 +234,7 @@ def style_txt_main2(txt_path='', work_='', style_dir='', chosen_content_file_lis
 
                         # if os.path.exists(f'{style_outdir}{s_name}/' + file) is False:
                         e = VGGEncoder().to(device)
+                        e_used = True
                         tar=get_target_img(jpg_path, device, e, d, s_tensor, c_name, s_name, style_outdir=style_outdir)
                     else:
                         print("file exists")
@@ -252,7 +259,8 @@ def style_txt_main2(txt_path='', work_='', style_dir='', chosen_content_file_lis
                     print(ec)
                     InfoNotifier.InfoNotifier.g_progress_info.append('error when saving stylized image')
         try:
-            del e
+            if e_used is True:
+                del e
         except RuntimeError:
             pass
 
@@ -274,6 +282,7 @@ def load_model(device):
     d.load_state_dict(torch.load(model_state_path))
     d = d.to(device)
     return d
+
 
 # get content name and file name
 def get_c_name_and_file_name(file_path):

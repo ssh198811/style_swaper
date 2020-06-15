@@ -17,7 +17,7 @@ import gen_lerp_ret
 from Gen_Style import style_transfer
 from path_util import PathUtils
 from gen_style_map import gen_style_map_file
-
+from button_state import GlobalConfig
 
 # TabFiles
 class MyGenDdsJpgThreadTabFiles(QThread):
@@ -73,8 +73,11 @@ class MyGenStyleTempThreadTabFiles(QThread):
             self.project_base = project_base
 
         def preview_lerg_pics(self):
-            style_transfer.style_main2(self.show_list,self.chosen_style_pic)
+            GlobalConfig.b_sync_block_in_thread_temp = True
+            QApplication.processEvents()
+            style_transfer.style_main_temp(self.show_list, self.chosen_style_pic)
             InfoNotifier.InfoNotifier.g_progress_info.append("完成，点击一张原图进行预览，并滑动微调栏杆调整插值参数")
+            GlobalConfig.b_sync_block_in_thread_temp = False
             self._signal_trigger.emit()
 
         def run(self):
@@ -107,6 +110,8 @@ class MyGenSeamlessStyleThreadTabFiles(QThread):
 
         def gen_expanded_pic(self):
             InfoNotifier.InfoNotifier.g_progress_info.append("开始生成DDS贴图············")
+            GlobalConfig.b_sync_block_op_in_progress = True
+            QApplication.processEvents()
             pad = 256
 
             # 存放被选中的目录中图片的相对路径到pic_list中
@@ -244,6 +249,7 @@ class MyGenSeamlessStyleThreadTabFiles(QThread):
             self.gen_expanded_pic()
             self.gen_style()
             self.gen_lerp_pic()
+            GlobalConfig.b_sync_block_op_in_progress = False
             self._signal.emit()
 
 
@@ -274,6 +280,8 @@ class MyGenStyleThreadTabFiles(QThread):
             # self.is_seamless=is_seamless
 
         def preview_lerg_pics(self):
+            GlobalConfig.b_sync_block_op_in_progress = True
+            QApplication.processEvents()
             style_pic = self.chosen_style_pic
             file_list = self.chosen_content_file_list
             #存放被选中的目录中图片的相对路径
@@ -287,6 +295,7 @@ class MyGenStyleThreadTabFiles(QThread):
 
             style_transfer.style_main(pic_list, style_pic, self.project_base, False)
             self.gen_lerg(pic_list)
+            GlobalConfig.b_sync_block_op_in_progress = False
             self._signal_trigger.emit()
 
         def gen_lerg(self, pic_list):
