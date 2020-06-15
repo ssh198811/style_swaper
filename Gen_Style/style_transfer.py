@@ -5,7 +5,7 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from model import VGGEncoder, Decoder
 from style_swap import style_swap
-from path_util import PathUtils
+from path_util import PathUtils,PathTemp
 import InfoNotifier
 img_base = 256
 img_pad = 100
@@ -34,14 +34,17 @@ def style_main2(pics_dir=None, style_dir=''):
     s_name = os.path.splitext(os.path.basename(style_dir))[0]
     if pics_dir is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
-        device = Device()
+
         # 判断是否存在预览图，若都已存在则不加载模型
         flag = True
         for pic_dir in pics_dir:
-            if os.path.exists(f'{os.path.dirname(pic_dir)}/temp/{s_name}/{os.path.basename(pic_dir)}') is False:
+            get_path = PathTemp(jpg_path_=pic_dir, style_path_=style_dir)
+            style_output = get_path.get_temp_after_jpg_path()
+            if os.path.exists(style_output) is False:
                 flag = False
                 break
         if flag is False:
+            device = Device()
             # set model
             d = load_model(device)
             s = Image.open(style_dir)
@@ -54,9 +57,9 @@ def style_main2(pics_dir=None, style_dir=''):
                     # 文件名
                     file, c_name = get_c_name_and_file_name(file_path)
                     s_name = get_style_name(style_dir)
-
-                    if os.path.exists(
-                            f'{os.path.dirname(file_path)}/temp/{s_name}/{os.path.basename(file_path)}') is False:
+                    get_path = PathTemp(jpg_path_=file_path, style_path_=style_dir)
+                    style_output = get_path.get_temp_after_jpg_path()
+                    if os.path.exists(style_output) is False:
                         e = VGGEncoder().to(device)
                         tar = get_target_img(file_path, device, e, d, s_tensor, c_name, s_name,
                                            style_outdir=os.path.dirname(file_path))
@@ -66,19 +69,16 @@ def style_main2(pics_dir=None, style_dir=''):
                     InfoNotifier.InfoNotifier.g_progress_info.append(file_path+'太大，无法迁移风格，推荐尝试1000×1000以下图片')
 
                 try:
-                    if os.path.exists(
-                            f'{os.path.dirname(file_path)}/temp/{s_name}/{os.path.basename(file_path)}') is False:
+                    if os.path.exists(style_output) is False:
                         # save style transfer result
-                        if os.path.exists(f'{os.path.dirname(file_path)}/temp/{s_name}/') is False:
-                            os.makedirs(f'{os.path.dirname(file_path)}/temp/{s_name}/')
-                        tar.save(f'{os.path.dirname(file_path)}/temp/{s_name}/' + file, quality=100)
-                        print(f'result saved into files{os.path.dirname(file_path)}/temp/{s_name}/' + file)
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'已生成{os.path.dirname(file_path)}/temp/'
-                                                                         f'{s_name}/' + file)
+                        if os.path.exists(os.path.dirname(style_output)) is False:
+                            os.makedirs(os.path.dirname(style_output))
+                        tar.save(style_output, quality=100)
+                        print(f'result saved into files{style_output}/')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'已生成{style_output}/' )
                     else:
 
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{os.path.dirname(file_path)}/temp/{s_name}/'
-                                                                         + file+'已存在，跳过')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'{style_output}/'+' 已存在，跳过')
 
                 except BaseException as ec:
                     print(ec)
@@ -97,7 +97,7 @@ def style_main(pics_dir=None, style_dir='', base_dir='', seamless=False):
     if pics_dir is not None:
         # content_name=pics_dir[0].replace("\\","/").split("/")[-2]
         # set device on GPU if available, else CPU
-        device = Device()
+
         # 判断是否存在预览图，若都已存在则不加载模型
         flag = True
         for pic_dir in pics_dir:
@@ -105,6 +105,7 @@ def style_main(pics_dir=None, style_dir='', base_dir='', seamless=False):
                 flag = False
                 break
         if flag is False:
+            device = Device()
             # set model
             d = load_model(device)
             s = Image.open(style_dir)
@@ -206,11 +207,11 @@ def style_txt_main2(txt_path='', work_='', style_dir='', chosen_content_file_lis
                     print(jpg_path+"is not exist,jump from process")
                     continue
                 if seamless is False:
-                    style_output_path=get_path.get_style_path()
+                    style_output_path = get_path.get_style_path()
                 else:
-                    style_output_path=get_path.get_expanded_style_path()
+                    style_output_path = get_path.get_expanded_style_path()
 
-                style_outdir=os.path.dirname(os.path.dirname(style_output_path))
+                style_outdir = os.path.dirname(os.path.dirname(style_output_path))
                 if os.path.exists(style_outdir) is False:
                     os.makedirs(style_outdir)
 

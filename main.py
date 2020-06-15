@@ -14,7 +14,7 @@ import glob
 import json
 import gen_lerp_ret
 
-from path_util import PathUtils
+from path_util import PathUtils, PathTemp
 from sub_threads import tab_multi_files_thread,tab_specific_pics_thread,tab_txt_thread
 from gen_style_map import gen_style_map_file
 
@@ -61,7 +61,7 @@ if __name__=='__main__':
             self.combocheckBox2.setEnabled(False)
 
             # 预览图片数
-            self.preview_num=3
+            self.preview_num = 3
 
             # 预读取最后一次使用的根目录
             try:
@@ -116,7 +116,7 @@ if __name__=='__main__':
             self.ui.pic_before_listWidget2.clicked.connect(self.previewed_before_clicked)
             self.ui.choose_pic_style_button1.clicked.connect(self.choose_style_pics_tab_files)
             self.ui.change_coe_horizontalSlider1.valueChanged.connect(self.preview_style_pic_in_label)
-            self.ui.change_coe_horizontalSlider2.valueChanged.connect(self.preview_style_pic_in_label_tab_txt)
+            self.ui.change_coe_horizontalSlider2.valueChanged.connect(self.preview_after_pic_in_label_tab_txt)
             self.ui.savePic_button1.clicked.connect(self.save_style)
             self.ui.choose_pic_txt_button2.clicked.connect(self.open_txt)
             self.ui.gen_jpg_tga_button2.clicked.connect(self.gen_jpg_tga_tab_txt)
@@ -135,9 +135,12 @@ if __name__=='__main__':
 
         # 更新日志
         def update_progress_info(self):
-            for info in InfoNotifier.InfoNotifier.g_progress_info:
-                self.ui.progress_Info.append(info)
-            InfoNotifier.InfoNotifier.g_progress_info.clear()
+            try:
+                for info in InfoNotifier.InfoNotifier.g_progress_info:
+                    self.ui.progress_Info.append(info)
+                InfoNotifier.InfoNotifier.g_progress_info.clear()
+            except BaseException as e:
+                print(e)
 
         def ui_update_progress_info(self, info=""):
             self.ui.progress_Info.append(info)
@@ -187,6 +190,7 @@ if __name__=='__main__':
             self.ui.pic_style_listWidget1.clear()
             # InfoNotifier.InfoNotifier.style_preview_pic_dir.clear()
             files, filetype = QFileDialog.getOpenFileNames(self, "选择文件", "./", "JPG文件(*.jpg)")
+            #
             if len(files) == 0:
                 style_img_icon = []
                 for pic in self.Choosed_style_pics_list:
@@ -282,7 +286,7 @@ if __name__=='__main__':
                     self.changethread = tab_multi_files_thread.MyGenDdsJpgThreadTabFiles()
                     self.changethread.set_para(self.ui.project_base_dir.text(), self.exe_dir, self.multi_relative_dir)
                     self.changethread.start()
-                    self.ui.choose_pic_multi_file_dir_button1.setEnabled(False)
+                    # self.ui.choose_pic_multi_file_dir_button1.setEnabled(False)
             self.combocheckBox2.setEnabled(True)
 
         def show_previewed_before_pic(self):
@@ -349,12 +353,15 @@ if __name__=='__main__':
             try:
                 if len(self.Choosed_style_pics_list)==0:
                     return
-                pic_style_index=self.ui.pic_style_listWidget1.currentIndex().row()
+                pic_style_index = self.ui.pic_style_listWidget1.currentIndex().row()
                 self.show_style_pic_in_label(pic_style_index)
                 InfoNotifier.InfoNotifier.g_progress_info.append("准备生成风格迁移后的预览图...")
                 self.gen_preview_pic = tab_multi_files_thread.MyGenStyleTempThreadTabFiles()
                 self.gen_preview_pic.set_para(self.chosen_style_pic, self.show_list, self.ui.project_base_dir.text())
                 self.gen_preview_pic.start()
+
+                self.preview_style_pic_in_label()
+
             except BaseException as e:
                 print(e)
                 InfoNotifier.InfoNotifier.g_progress_info.append("请选择一个原图目录生成风格图片")
@@ -380,14 +387,14 @@ if __name__=='__main__':
             try:
                 content_index = self.ui.pic_before_listWidget1.currentIndex().row()
                 content_pic = self.show_list[content_index]
-                if self.chosen_style_pic != '':
-                    s_name = os.path.basename(self.chosen_style_pic).split('.')[0]
-                    after_pic_dir = os.path.dirname(content_pic) + '/temp/' + s_name + '/' + os.path.basename(
-                        content_pic)
-                else:
-                    return
-                self.save_path1 = os.path.dirname(content_pic)+ '/temp/lerp.jpg'
+                get_path = PathTemp(jpg_path_=content_pic, style_path_=self.chosen_style_pic)
+                s_name = os.path.basename(self.chosen_style_pic).split('.')[0]
+                # after_pic_dir = os.path.dirname(content_pic) + '/temp/' + s_name + '/' + os.path.basename(
+                #         content_pic)
+                # self.save_path1 = os.path.dirname(content_pic) + '/temp/lerp.jpg'
                 self.value_slider = self.ui.change_coe_horizontalSlider1.value()
+                after_pic_dir = get_path.get_temp_after_jpg_path()
+                self.save_path1 = get_path.get_temp_lerp_path()
                 img, _ = gen_lerp_ret.lerp_img(content_pic, after_pic_dir, float(self.value_slider))
                 cv2.imwrite(self.save_path1, img)
                 self.ui.pic_after_label1.clear()
@@ -586,7 +593,7 @@ if __name__=='__main__':
             pic_index = self.ui.pic_before_listWidget2.currentIndex().row()
             self.show_before_pic_in_lable_tab_txt(pic_index)
             try:
-                self.preview_style_pic_in_label_tab_txt()
+                self.preview_after_pic_in_label_tab_txt()
             except BaseException as be:
                 print(be)
                 InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图片并进行预览")
@@ -687,6 +694,7 @@ if __name__=='__main__':
                 self.chosen_style_pic2 = self.Choosed_style_pics_list2[pic_style_index]
                 self.show_style_pic_in_label_tab_txt(pic_style_index)
                 self.make_temp_previewed()
+                self.preview_after_pic_in_label_tab_txt()
             except BaseException as e:
                 print(e)
 
@@ -713,16 +721,17 @@ if __name__=='__main__':
             self.ui.pic_style_label2.setPixmap(pix)
             self.ui.pic_style_label2.setScaledContents(True)
 
-        def preview_style_pic_in_label_tab_txt(self):
+        def preview_after_pic_in_label_tab_txt(self):
+            # 预览风格化图
             try:
                 content_index = self.ui.pic_before_listWidget2.currentIndex().row()
                 content_pic = self.tmp_list[content_index]
-                if self.chosen_style_pic2 != '':
-                    s_name = os.path.basename(self.chosen_style_pic2).split('.')[0]
-                    after_pic_dir=os.path.dirname(content_pic)+'/temp/'+s_name+'/'+os.path.basename(content_pic)
-                else:
-                    return
-                save_path2 = os.path.dirname(content_pic) + '/temp/lerp.jpg'
+                get_path=PathTemp(jpg_path_=content_pic, style_path_=self.chosen_style_pic2)
+                # s_name = os.path.basename(self.chosen_style_pic2).split('.')[0]
+                # after_pic_dir = os.path.dirname(content_pic)+'/temp/'+s_name+'/'+os.path.basename(content_pic)
+                # save_path2 = os.path.dirname(content_pic) + '/temp/lerp.jpg'
+                after_pic_dir = get_path.get_temp_after_jpg_path()
+                save_path2 = get_path.get_temp_lerp_path()
                 self.value_slider = self.ui.change_coe_horizontalSlider2.value()
                 img, _ = gen_lerp_ret.lerp_img(content_pic, after_pic_dir, float(self.value_slider))
                 gen_lerp_ret.write_img(img, save_path2)
@@ -733,7 +742,7 @@ if __name__=='__main__':
                 self.ui.pic_after_label2.setIconSize(QSize(291, 271))
                 self.ui.pic_after_label2.addItem(item)
             except BaseException as e:
-                print('preview_style_pic_in_label_tab_txt', e)
+                print('preview_after_pic_in_label_tab_txt', e)
                 InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图或等待生成预览图片")
 
         def is_seamless_ornot_tab_txt(self):
@@ -783,7 +792,7 @@ if __name__=='__main__':
             print(self.chosen_content_list3)
 
         def gen_jpg_tga_tab_pics(self):
-            self.ui.choose_pics_button3.setEnabled(False)
+            # self.ui.choose_pics_button3.setEnabled(False)
             self.base = self.ui.project_base_dir.text()
             self.mythread_gen = tab_specific_pics_thread.MyGenDdsJpgThreadTabPics()
             self.mythread_gen.set_para(self.chosen_content_list3, self.ui.project_base_dir.text())
@@ -920,9 +929,12 @@ if __name__=='__main__':
         def pic_style_clicked_tab_pics(self):
             if len(self.Choosed_style_pics_list3) == 0:
                 return
+
             pic_style_index = self.ui.pic_style_listWidget3.currentIndex().row()
             self.show_style_pic_in_label_tab_pics(pic_style_index)
+            self.ui.pic_style_listWidget3.setEnabled(False)
             self.make_temp_previewed_tab_pics()
+            self.preview_after_pic_in_label_tab_pics()
 
         def show_style_pic_in_label_tab_pics(self, i):
             # print(i)
@@ -948,12 +960,16 @@ if __name__=='__main__':
                     if len(preview_file_list) == 0:
                         return
                     tmp_file = preview_file_list[0]
-                    parent_tmp = os.path.dirname(tmp_file)
-                    tem_file = parent_tmp + '/temp/'
+                    get_path=PathTemp(jpg_path_=tmp_file)
+                    # parent_tmp = os.path.dirname(tmp_file)
+                    # tem_file = parent_tmp + '/temp/'
+                    tem_file = get_path.get_temp_dir_path()
                     self.tem_file = tem_file
                     self.mythread_temp3 = tab_specific_pics_thread.MyGenStyleTempThreadTabPics()
                     self.mythread_temp3.set_para(preview_file_list, self.chosen_style_pic3, tem_file)
                     self.mythread_temp3.start()
+                    self.preview_after_pic_in_label_tab_pics()
+                self.ui.pic_style_listWidget3.setEnabled(True)
             except BaseException as be:
                 print(be)
                 InfoNotifier.InfoNotifier.g_progress_info.append("先加入原图")
@@ -964,12 +980,12 @@ if __name__=='__main__':
 
                 content_index = self.ui.pic_before_listWidget3.currentIndex().row()
                 content_pic = self.tmp_before_list3[content_index]
-                if self.chosen_style_pic3 != '':
-                    s_name = os.path.basename(self.chosen_style_pic3).split('.')[0]
-                    after_pic_dir = os.path.dirname(content_pic)+'/temp/'+s_name+'/'+os.path.basename(content_pic)
-                else:
-                    return
-                self.save_path1 = self.tem_file + 'lerp.jpg'
+                get_path = PathTemp(jpg_path_=content_pic,style_path_=self.chosen_style_pic3)
+                # s_name = os.path.basename(self.chosen_style_pic3).split('.')[0]
+                # after_pic_dir = os.path.dirname(content_pic)+'/temp/'+s_name+'/'+os.path.basename(content_pic)
+                after_pic_dir = get_path.get_temp_after_jpg_path()
+                # self.save_path1 = self.tem_file + 'lerp.jpg'
+                self.save_path1 = get_path.get_temp_lerp_path()
                 self.value_slider = self.ui.change_coe_horizontalSlider3.value()
                 img, _ = gen_lerp_ret.lerp_img(content_pic, after_pic_dir, float(self.value_slider))
                 cv2.imwrite(self.save_path1, img)

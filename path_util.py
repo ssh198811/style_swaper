@@ -58,7 +58,8 @@ class PathUtils:
 
     # expanded-style
     def get_expanded_style_path(self):
-        return f"{self.work_output}/{self.get_parent_name()}/expanded/style_output/{self.get_style_name()}/{self.file_name_jpg}"
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/style_output/{self.get_style_name()}/" \
+               f"{self.file_name_jpg}"
 
     # expanded_lerp
     def get_expanded_lerp_path_jpg(self):
@@ -66,15 +67,34 @@ class PathUtils:
                f"{self.file_name_jpg}"
 
     def get_expanded_lerp_path_tga(self):
-        return f"{self.work_output}/{self.get_parent_name()}/expanded/lerp_output/{self.get_style_name()}/{self.file_name_tga}"
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/lerp_output/{self.get_style_name()}/" \
+               f"{self.file_name_tga}"
 
     # seamless
     def get_seamless_path(self):
-        return f"{self.work_output}/{self.get_parent_name()}/expanded/seamless_output/{self.get_style_name()}/{self.file_name_tga}"
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/seamless_output/{self.get_style_name()}/" \
+               f"{self.file_name_tga}"
 
     # expanded-dds
     def get_seamless_dds_path(self):
         return f"{self.work_output}/{self.get_parent_name()}/expanded/dds_output/{self.get_style_name()}/"
+
+# get temp files' path from jpg path
+class PathTemp:
+    def __init__(self, jpg_path_='', style_path_=''):
+        self.jpg_path = jpg_path_
+        self.style_path = style_path_
+        self.s_name = os.path.basename(self.style_path).split('.')[0]
+    def get_temp_dir_path(self):
+        # temp文件夹
+        return os.path.dirname(self.jpg_path) + '/temp/'
+    def get_temp_after_jpg_path(self):
+        return os.path.dirname(self.jpg_path) + '/temp/' + self.s_name + '/' + os.path.basename(
+                        self.jpg_path)
+    def get_temp_lerp_path(self):
+        return os.path.dirname(self.jpg_path) + '/temp/lerp.jpg'
+
+
 
 
 if __name__ == '__main__':
