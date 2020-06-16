@@ -92,6 +92,7 @@ if __name__ == '__main__':
     from PyQt5 import QtWidgets,QtCore
     import sys
     items = ['Python', 'R', 'Java', 'C++', 'CSS']
+    items2 = ['1', '2', '3', '4']
 
     app = QtWidgets.QApplication(sys.argv)
     Form = QtWidgets.QWidget()
@@ -99,6 +100,7 @@ if __name__ == '__main__':
     comboBox1.setGeometry(QtCore.QRect(10, 10, 100, 20))
     comboBox1.setMinimumSize(QtCore.QSize(100, 20))
     comboBox1.loadItems(items)
+    comboBox1.loadItems(items2)
 
     Form.show()
     sys.exit(app.exec_())

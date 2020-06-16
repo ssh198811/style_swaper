@@ -71,7 +71,7 @@ font: 12pt &quot;Arial&quot;;</string>
      <string notr="true">background-color: rgb(0, 59, 89);</string>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="txt">
      <attribute name="title">
@@ -320,6 +320,12 @@ color: rgb(255, 252, 253);</string>
         <height>251</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string/>
+      </property>
+      <property name="toolTipDuration">
+       <number>1</number>
+      </property>
       <property name="styleSheet">
        <string notr="true">color: rgb(203, 203, 203);</string>
       </property>
@@ -440,6 +446,9 @@ color: rgb(212, 212, 212);</string>
         <width>301</width>
         <height>271</height>
        </rect>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; color:#ff0000;&quot;&gt;删除风格化图，转换格式后的图片，和生成无缝贴图过程中expand操作的图片&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="styleSheet">
        <string notr="true">border-color: rgb(0, 85, 127);</string>
@@ -1403,11 +1412,14 @@ color: rgb(212, 212, 212);</string>
    <widget class="QTextBrowser" name="progress_Info">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>810</y>
+      <x>0</x>
+      <y>790</y>
       <width>1181</width>
       <height>151</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;1.对页面初始化，保留工作目录。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;2.删除保存过程中生成的lerp_output，temp和seamless_output文件&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="styleSheet">
      <string notr="true">color: rgb(212, 212, 212);</string>
@@ -1417,9 +1429,9 @@ color: rgb(212, 212, 212);</string>
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>770</y>
-      <width>131</width>
-      <height>31</height>
+      <y>760</y>
+      <width>121</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -1429,11 +1441,66 @@ color: rgb(212, 212, 212);</string>
      <string>进度信息：</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="reset_button">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>950</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:'宋体'; color:#242424;&quot;&gt;1. 对页面初始化，保留工作目录。&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:'宋体'; color:#242424;&quot;&gt;2. 删除保存过程中生成的lerp_output，&lt;/span&gt;&lt;span style=&quot; font-family:'Calibri'; color:#242424;&quot;&gt;temp&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; color:#242424;&quot;&gt;和&lt;/span&gt;&lt;span style=&quot; font-family:'Calibri'; color:#242424;&quot;&gt;seamless_output&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; color:#242424;&quot;&gt;文件&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="toolTipDuration">
+     <number>-1</number>
+    </property>
+    <property name="statusTip">
+     <string/>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(90, 90, 90);
+color: rgb(255, 251, 252);
+</string>
+    </property>
+    <property name="text">
+     <string>复位</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="delete_files_button">
+    <property name="geometry">
+     <rect>
+      <x>1100</x>
+      <y>950</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:'宋体'; color:#1e1e1e;&quot;&gt;1. 删除 style_output 文件&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:'宋体'; color:#1e1e1e;&quot;&gt;2. 删除由DDS贴图转化的&lt;/span&gt;&lt;span style=&quot; font-family:'Calibri'; color:#1e1e1e;&quot;&gt;JPG&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; color:#1e1e1e;&quot;&gt;，&lt;/span&gt;&lt;span style=&quot; font-family:'Calibri'; color:#1e1e1e;&quot;&gt;TGA&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; color:#1e1e1e;&quot;&gt;图片&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:'宋体'; color:#1e1e1e;&quot;&gt;3. 删除经Exapnd操作产生的图片&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;&lt;span style=&quot; font-family:'Calibri'; color:#1e1e1e;&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="toolTipDuration">
+     <number>-1</number>
+    </property>
+    <property name="statusTip">
+     <string comment="1"/>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(90, 90, 90);
+color: rgb(255, 251, 252);</string>
+    </property>
+    <property name="text">
+     <string>清空缓存</string>
+    </property>
+   </widget>
    <zorder>make_project_dir_button</zorder>
    <zorder>SpecPic</zorder>
    <zorder>project_base_dir</zorder>
    <zorder>progress_Info</zorder>
    <zorder>label</zorder>
+   <zorder>reset_button</zorder>
+   <zorder>delete_files_button</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action3">

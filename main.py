@@ -1,9 +1,9 @@
 from PyQt5 import QtWidgets,QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMenu, QMessageBox , QListWidgetItem
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMenu, QMessageBox, QListWidgetItem, QToolTip
 from PyQt5.QtCore import pyqtSignal, QThread, Qt, QUrl, QPoint,QSize,QRect
 from PyQt5 import QtGui
 from combocheckbox import ComboCheckBox
-from PyQt5.QtGui import QIcon, QDesktopServices,QPixmap
+from PyQt5.QtGui import QIcon, QDesktopServices, QPixmap, QFont
 import Ui_test519
 import os
 import time
@@ -17,7 +17,8 @@ from  button_state import GlobalConfig
 from path_util import PathUtils, PathTemp
 from sub_threads import tab_multi_files_thread,tab_specific_pics_thread,tab_txt_thread
 from gen_style_map import gen_style_map_file
-
+import shutil
+import random
 
 class Mythread(QThread):
     _signal_progress_info = pyqtSignal()
@@ -61,6 +62,8 @@ if __name__=='__main__':
                                               "color: rgb(0, 0, 0);")
             self.combocheckBox2.setEnabled(False)
 
+
+
             # 预览图片数
             self.preview_num = 3
 
@@ -101,6 +104,8 @@ if __name__=='__main__':
             self.chosen_style_pic2 = ''
             # 选中复选框
             self.chosen_file_list1 = []
+            # 生成图片点击数
+            self.combocheckbox2_button_clicked = 0
 
             # 多选图片导入tab中选中的原图数组
             self.chosen_content_list3 = []
@@ -134,6 +139,8 @@ if __name__=='__main__':
             self.ui.pic_style_listWidget3.clicked.connect(self.pic_style_clicked_tab_pics)
             self.ui.change_coe_horizontalSlider3.valueChanged.connect(self.preview_after_pic_in_label_tab_pics)
             self.ui.savePic_button3.clicked.connect(self.save_all_tab_pics)
+            self.ui.reset_button.clicked.connect(self.del_data)
+            self.ui.delete_files_button.clicked.connect(self.del_deep)
 
         # 更新日志
         def update_progress_info(self):
@@ -143,12 +150,14 @@ if __name__=='__main__':
                 InfoNotifier.InfoNotifier.g_progress_info.clear()
             except BaseException as e:
                 print(e)
+
+        def ui_update_progress_info(self, info=""):
+            self.ui.progress_Info.append(info)
+
         # 控制控件
         def update_button_state(self):
             if GlobalConfig.b_sync_block_op_in_progress is True:
-                # self.ui.txt.setEnabled(False)
-                # self.ui.t1.setEnabled(False)
-                # self.ui.pics.setEnabled(False)
+                # 保存图片时
                 self.ui.make_project_dir_button.setEnabled(False)
                 self.ui.project_base_dir.setEnabled(False)
                 self.ui.choose_pic_multi_file_dir_button1.setEnabled(False)
@@ -165,9 +174,7 @@ if __name__=='__main__':
                 self.ui.savePic_button3.setEnabled(False)
 
             if GlobalConfig.b_sync_block_op_in_progress is False:
-                # self.ui.txt.setEnabled(True)
-                # self.ui.t1.setEnabled(True)
-                # self.ui.pics.setEnabled(True)
+
                 self.ui.make_project_dir_button.setEnabled(True)
                 self.ui.make_project_dir_button.setEnabled(True)
                 self.ui.project_base_dir.setEnabled(True)
@@ -184,6 +191,7 @@ if __name__=='__main__':
                 self.ui.choose_pic_style_button2_2.setEnabled(True)
                 self.ui.savePic_button3.setEnabled(True)
             if GlobalConfig.b_sync_block_in_thread_temp is True:
+                # 生成预览图时
                 self.ui.pic_style_listWidget1.setEnabled(False)
                 self.ui.pic_style_listWidget2.setEnabled(False)
                 self.ui.pic_style_listWidget3.setEnabled(False)
@@ -192,11 +200,86 @@ if __name__=='__main__':
                 self.ui.pic_style_listWidget2.setEnabled(True)
                 self.ui.pic_style_listWidget3.setEnabled(True)
 
-        def ui_update_progress_info(self, info=""):
-            self.ui.progress_Info.append(info)
+        # 清除数据
+        def del_data(self):
+            # self.ui.project_base_dir.clear()
+            self.combocheckBox1.clearEditText()
+            self.ui.pic_before_label2.clear()
+            self.ui.pic_before_listWidget2.clear()
+            self.ui.pic_style_label2.clear()
+            self.ui.pic_style_listWidget2.clear()
+            self.ui.pic_after_label2.clear()
+            self.ui.progress_Info.clear()
+            self.combocheckBox2.clearEditText()
+            self.ui.pic_before_label1.clear()
+            self.ui.pic_before_listWidget1.clear()
+            self.ui.pic_style_label1.clear()
+            self.ui.pic_style_listWidget1.clear()
+            self.ui.pic_after_label1.clear()
+            self.ui.pic_before_label3.clear()
+            self.ui.pic_before_listWidget3.clear()
+            self.ui.pic_style_label3.clear()
+            self.ui.pic_style_listWidget3.clear()
+            self.ui.pic_after_label3.clear()
+            self.del_temp_dir(self.ui.project_base_dir.text())
+            InfoNotifier.InfoNotifier.g_progress_info.append("已恢复初始界面")
+            try:
+                self.chosen_content_list3 = []
+                # 原图目录列表
+                self.multi_dir_project = []
+                # 目录相对路径
+                self.multi_relative_dir = []
+                # 选择风格图数组
+                self.Choosed_style_pics_list = []
+                self.Choosed_style_pics_list2 = []
+                self.Choosed_style_pics_list3 = []
+                # 点击选中风格图路径
+                self.chosen_style_pic3 = ''
+                self.chosen_style_pic2 = ''
+                # 选中复选框
+                self.chosen_file_list1 = []
+                # 生成图片点击数
+                self.combocheckbox2_button_clicked = 0
+
+                # 多选图片导入tab中选中的原图数组
+                self.chosen_content_list3 = []
+                # 存放缩写路径和相对路径字典
+                self.files_dict = {}
+            except BaseException as be:
+                print(be)
+
+        # 删除文件---delete lerp,seamless and temp files
+        def del_temp_dir(self, path):
+            if os.path.isdir(path):
+                if 'lerp_output' in path or 'temp' in path or 'seamless_output' in path:
+                    shutil.rmtree(path)
+                else:
+                    for item in os.listdir(path):
+                        itempath = os.path.join(path, item)
+                        self.del_temp_dir(itempath)
+
+        # 删除文件--delete style_output and dds to jpg,tga output
+        def del_deep(self):
+            if self.ui.project_base_dir.text() == '':
+                InfoNotifier.InfoNotifier.g_progress_info.append("没有选择工作目录！")
+                return
+            path = f'{self.ui.project_base_dir.text()}/data/style_transfer/'
+            self.del_deep_temp_dir(path)
+            InfoNotifier.InfoNotifier.g_progress_info.append("已清空")
+
+        def del_deep_temp_dir(self, path):
+            if os.path.isdir(path) and 'style_output' in path and 'style_transfer' in path:
+                shutil.rmtree(path)
+            if os.path.isdir(path) and 'dds_output' not in path and 'style_transfer' in path:
+                for item in os.listdir(path):
+                    item_path = os.path.join(path, item)
+                    if os.path.isfile(item_path):
+                        os.remove(item_path)
+                    else:
+                        self.del_deep_temp_dir(item_path)
+
 
         # 选根目录
-
         def make_project_dir(self):
             directory = QtWidgets.QFileDialog.getExistingDirectory(self, "选择文件夹", "./")
             if len(directory) == 0:
@@ -225,7 +308,7 @@ if __name__=='__main__':
             if len(directory) == 0:
                 return
             directory_temp=directory.split('/')
-            if directory not in self.multi_dir_project:
+            if directory_temp[-2]+'/'+directory_temp[-1] not in self.multi_dir_project:
                 rela_path = directory.replace(self.ui.project_base_dir.text()+'/', "")
                 self.files_dict[directory_temp[-2]+'/'+directory_temp[-1]] = rela_path
                 self.multi_relative_dir.append(directory.replace(self.ui.project_base_dir.text()+'/', ""))
@@ -324,7 +407,11 @@ if __name__=='__main__':
 
         def gen_dds_jpg(self):
             # 生成jpg,tga格式图片
+            self.combocheckbox2_button_clicked += 1
             self.combocheckBox2.loadItems(self.multi_dir_project)
+            if self.combocheckbox2_button_clicked > 1:
+                self.combocheckBox2.items = self.combocheckBox2.items[self.combocheckbox2_button_clicked-1:]
+                print(self.combocheckBox2.items)
             if self.ui.project_base_dir.text() == "":
                 InfoNotifier.InfoNotifier.g_progress_info.append("请先为工程创建根目录")
             else:
@@ -853,9 +940,11 @@ if __name__=='__main__':
             style_img_icon = []
             show_before_list = []
             cnt = 3
-            if len(self.chosen_content_list3) < 3:
-                cnt = len(self.chosen_content_list3)
-            for i in range(cnt):
+            if len(self.chosen_content_list3) <= cnt:
+                loop = range(len(self.chosen_content_list3))
+            else:
+                loop = random.sample(range(len(self.chosen_content_list3)), 3)
+            for i in loop:
                 dds_path = self.chosen_content_list3[i]
                 get_path = PathUtils(_work=self.ui.project_base_dir.text(), dds_path=dds_path)
                 jpg_path = get_path.dds_to_jpg_path()
@@ -867,7 +956,7 @@ if __name__=='__main__':
                 icon.addPixmap(pix)
                 style_img_icon.append(icon)
             index = 0
-            while index < cnt:
+            while index < len(show_before_list):
                 try:
                     item = QListWidgetItem()
                     item.setIcon(style_img_icon[index])
