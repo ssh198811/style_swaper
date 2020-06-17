@@ -18,7 +18,9 @@ from path_util import PathUtils, PathTemp
 from sub_threads import tab_multi_files_thread,tab_specific_pics_thread,tab_txt_thread
 from gen_style_map import gen_style_map_file
 import shutil
+import stat
 import random
+import hashlib
 
 class Mythread(QThread):
     _signal_progress_info = pyqtSignal()
@@ -37,7 +39,92 @@ class Mythread(QThread):
             time.sleep(1.5)
 
 
-if __name__=='__main__':
+class MyDelFilesThread(QThread):
+    signal_ = pyqtSignal()
+
+    def __init__(self):
+        super(MyDelFilesThread, self).__init__()
+        self.path = ''
+
+    def set_para(self, path=''):
+        self.path = path
+
+    # 删除文件---delete lerp,seamless and temp files
+    def readonly_handler(self, func, path, exc):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
+    def del_temp_dir(self, path):
+        if os.path.isdir(path):
+            if 'lerp_output' in path or 'temp' in path or 'seamless_output' in path:
+                try:
+                    shutil.rmtree(path, onerror=self.readonly_handler)
+                except BaseException as e:
+                    print('含只读文件')
+                    print(e)
+                    os.chmod(path, stat.S_IWRITE)
+                    os.remove(path)
+                    print('已强制删除')
+            else:
+                for item in os.listdir(path):
+                    itempath = os.path.join(path, item)
+                    self.del_temp_dir(itempath)
+
+    def run(self):
+        self.del_temp_dir(self.path)
+        self.signal_.emit()
+class MyDeepDelThread(QThread):
+    signal_=pyqtSignal()
+    def __init__(self):
+        super(MyDeepDelThread, self).__init__()
+        self.path = ''
+
+    def set_para(self, path=''):
+        self.path = path
+
+    def readonly_handler(self, func, path, exc):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
+    # 删除文件--delete style_output and dds to jpg,tga output
+    def del_deep(self, path):
+        if path == '':
+            InfoNotifier.InfoNotifier.g_progress_info.append("没有选择工作目录！")
+            return
+        path = f'{path}/data/style_transfer/'
+        self.del_deep_temp_dir(path)
+        InfoNotifier.InfoNotifier.g_progress_info.append("已清空")
+
+    def del_deep_temp_dir(self, path):
+        if os.path.isdir(path) and 'style_output' in path and 'style_transfer' in path:
+            try:
+                shutil.rmtree(path, onerror=self.readonly_handler)
+            except BaseException as be:
+                print('存在只读文件')
+                print(be)
+                os.chmod(path, stat.S_IWRITE)
+                os.remove(path)
+                print('已强制删除')
+        if os.path.isdir(path) and 'dds_output' not in path and 'style_transfer' in path:
+            for item in os.listdir(path):
+                item_path = os.path.join(path, item)
+                if os.path.isfile(item_path):
+                    try:
+                        os.remove(item_path)
+                    except BaseException as be:
+                        print('存在只读文件')
+                        print(be)
+                        os.chmod(item_path, stat.S_IWRITE)
+                        os.remove(item_path)
+                        print('已强制删除')
+                else:
+                    self.del_deep_temp_dir(item_path)
+    def run(self):
+        self.del_deep(self.path)
+        self.signal_.emit()
+
+
+if __name__ == '__main__':
 
     class MainWindow(QMainWindow):
         def __init__(self):
@@ -221,62 +308,42 @@ if __name__=='__main__':
             self.ui.pic_style_label3.clear()
             self.ui.pic_style_listWidget3.clear()
             self.ui.pic_after_label3.clear()
-            self.del_temp_dir(self.ui.project_base_dir.text())
-            InfoNotifier.InfoNotifier.g_progress_info.append("已恢复初始界面")
             try:
-                self.chosen_content_list3 = []
-                # 原图目录列表
-                self.multi_dir_project = []
-                # 目录相对路径
-                self.multi_relative_dir = []
-                # 选择风格图数组
-                self.Choosed_style_pics_list = []
-                self.Choosed_style_pics_list2 = []
-                self.Choosed_style_pics_list3 = []
-                # 点击选中风格图路径
-                self.chosen_style_pic3 = ''
-                self.chosen_style_pic2 = ''
-                # 选中复选框
-                self.chosen_file_list1 = []
-                # 生成图片点击数
-                self.combocheckbox2_button_clicked = 0
-
-                # 多选图片导入tab中选中的原图数组
-                self.chosen_content_list3 = []
-                # 存放缩写路径和相对路径字典
-                self.files_dict = {}
+                # self.del_temp_dir(self.ui.project_base_dir.text())
+                self.del_thread = MyDelFilesThread()
+                self.del_thread.set_para(self.ui.project_base_dir.text())
+                self.del_thread.run()
+                InfoNotifier.InfoNotifier.g_progress_info.append("已恢复初始界面")
             except BaseException as be:
                 print(be)
 
-        # 删除文件---delete lerp,seamless and temp files
-        def del_temp_dir(self, path):
-            if os.path.isdir(path):
-                if 'lerp_output' in path or 'temp' in path or 'seamless_output' in path:
-                    shutil.rmtree(path)
-                else:
-                    for item in os.listdir(path):
-                        itempath = os.path.join(path, item)
-                        self.del_temp_dir(itempath)
+            self.chosen_content_list3 = []
+            # 原图目录列表
+            self.multi_dir_project = []
+            # 目录相对路径
+            self.multi_relative_dir = []
+            # 选择风格图数组
+            self.Choosed_style_pics_list = []
+            self.Choosed_style_pics_list2 = []
+            self.Choosed_style_pics_list3 = []
+            # 点击选中风格图路径
+            self.chosen_style_pic3 = ''
+            self.chosen_style_pic2 = ''
+            # 选中复选框
+            self.chosen_file_list1 = []
+            # 生成图片点击数
+            self.combocheckbox2_button_clicked = 0
 
-        # 删除文件--delete style_output and dds to jpg,tga output
+            # 多选图片导入tab中选中的原图数组
+            self.chosen_content_list3 = []
+            # 存放缩写路径和相对路径字典
+            self.files_dict = {}
+
+        # deep delete
         def del_deep(self):
-            if self.ui.project_base_dir.text() == '':
-                InfoNotifier.InfoNotifier.g_progress_info.append("没有选择工作目录！")
-                return
-            path = f'{self.ui.project_base_dir.text()}/data/style_transfer/'
-            self.del_deep_temp_dir(path)
-            InfoNotifier.InfoNotifier.g_progress_info.append("已清空")
-
-        def del_deep_temp_dir(self, path):
-            if os.path.isdir(path) and 'style_output' in path and 'style_transfer' in path:
-                shutil.rmtree(path)
-            if os.path.isdir(path) and 'dds_output' not in path and 'style_transfer' in path:
-                for item in os.listdir(path):
-                    item_path = os.path.join(path, item)
-                    if os.path.isfile(item_path):
-                        os.remove(item_path)
-                    else:
-                        self.del_deep_temp_dir(item_path)
+            self.my_deep_del = MyDeepDelThread()
+            self.my_deep_del.set_para(self.ui.project_base_dir.text())
+            self.my_deep_del.start()
 
 
         # 选根目录

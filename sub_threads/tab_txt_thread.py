@@ -20,6 +20,7 @@ from button_state import GlobalConfig
 
 # tab_txt
 
+
 class MyGenDdsJpgThreadTabTxt(QThread):
     # 生成jpg,tga
     _signal = pyqtSignal()
