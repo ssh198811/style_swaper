@@ -32,6 +32,9 @@ font: 12pt &quot;Arial&quot;;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTabWidget" name="SpecPic">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -74,6 +77,9 @@ font: 12pt &quot;Arial&quot;;</string>
      <number>0</number>
     </property>
     <widget class="QWidget" name="txt">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <attribute name="title">
       <string notr="true">TXT路径导入</string>
      </attribute>
@@ -448,7 +454,7 @@ color: rgb(212, 212, 212);</string>
        </rect>
       </property>
       <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:600; color:#ff0000;&quot;&gt;删除风格化图，转换格式后的图片，和生成无缝贴图过程中expand操作的图片&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string/>
       </property>
       <property name="styleSheet">
        <string notr="true">border-color: rgb(0, 85, 127);</string>
@@ -1442,6 +1448,9 @@ color: rgb(212, 212, 212);</string>
     </property>
    </widget>
    <widget class="QPushButton" name="reset_button">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>990</x>
@@ -1469,6 +1478,9 @@ color: rgb(255, 251, 252);
     </property>
    </widget>
    <widget class="QPushButton" name="delete_files_button">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>1100</x>

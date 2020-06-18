@@ -2,6 +2,7 @@ import hashlib
 from PIL import Image
 import numpy as np
 
+
 def img_hash(str):
     fd1 = np.array(Image.open(str))
     return hashlib.md5(fd1).hexdigest()
