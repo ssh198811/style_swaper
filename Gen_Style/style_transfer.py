@@ -118,15 +118,20 @@ def style_main(pics_dir=None, style_dir='', base_dir='', seamless=False):
             for file_path in pics_dir:
                 file_path.replace("\\", "/")
                 get_path = PathUtils(base_dir, style_dir, file_path)
+
                 if seamless is False:
                     jpg_path = get_path.dds_to_jpg_path()
                     style_output = get_path.get_style_path()
                 else:
                     jpg_path = get_path.get_expanded_jpg_path()
                     style_output = get_path.get_expanded_style_path()
+
                 save_dir = os.path.dirname(os.path.dirname(style_output))
                 if os.path.exists(save_dir) is False:
                     os.makedirs(save_dir)
+                if os.path.exists(jpg_path) is False:
+                    print(jpg_path+"is not exist,jump from process")
+                    continue
                 if jpg_path.endswith(".jpg") is False:
                     continue
                 try:
@@ -205,9 +210,9 @@ def style_main_txt(txt_path='', work_='', style_dir='', chosen_content_file_list
                 # get_path.style_path = style_dir
                 # get_path.dds_path=file_path
                 if seamless is False:
-                    jpg_path=get_path.dds_to_jpg_path()
+                    jpg_path = get_path.dds_to_jpg_path()
                 else:
-                    jpg_path=get_path.get_expanded_jpg_path()
+                    jpg_path = get_path.get_expanded_jpg_path()
                 # jpg_path=parent_path+'/style_transfer/'+file_name.replace(".dds",".jpg")
                 if os.path.exists(jpg_path) is False:
                     print(jpg_path+"is not exist,jump from process")
@@ -235,7 +240,7 @@ def style_main_txt(txt_path='', work_='', style_dir='', chosen_content_file_list
                         # if os.path.exists(f'{style_outdir}{s_name}/' + file) is False:
                         e = VGGEncoder().to(device)
                         e_used = True
-                        tar=get_target_img(jpg_path, device, e, d, s_tensor, c_name, s_name, style_outdir=style_outdir)
+                        tar = get_target_img(jpg_path, device, e, d, s_tensor, c_name, s_name, style_outdir=style_outdir)
                     else:
                         print("file exists")
                         InfoNotifier.InfoNotifier.g_progress_info.append(style_output_path+'已存在，跳过')

@@ -73,6 +73,8 @@ class MyDelFilesThread(QThread):
     def run(self):
         self.del_temp_dir(self.path)
         self.signal_.emit()
+
+
 class MyDeepDelThread(QThread):
     signal_=pyqtSignal()
     def __init__(self):
@@ -128,7 +130,6 @@ if __name__ == '__main__':
 
     class MainWindow(QMainWindow):
         def __init__(self):
-
             super(MainWindow, self).__init__()
             self.ui = Ui_test519.Ui_MainWindow()
             self.ui.setupUi(self)
@@ -148,9 +149,8 @@ if __name__ == '__main__':
             self.combocheckBox2.setStyleSheet("background-color: rgb(90, 90, 90);\n"
                                               "color: rgb(0, 0, 0);")
             self.combocheckBox2.setEnabled(False)
-
-
-
+            GlobalConfig.b_sync_block_init = True
+            QApplication.processEvents()
             # 预览图片数
             self.preview_num = 3
 
@@ -160,6 +160,9 @@ if __name__ == '__main__':
                     lines = f.readlines()
                     last_line = lines[-1].replace("\n", "")
                     self.ui.project_base_dir.setText(last_line)
+                    GlobalConfig.b_sync_block_init = False
+                    # GlobalConfig.b_sync_block_second_step = True
+                    QApplication.processEvents()
             except BaseException as e:
                 print(e)
                 pass
@@ -175,9 +178,38 @@ if __name__ == '__main__':
             self.ui.pic_before_listWidget3.setFlow(QtWidgets.QListView.LeftToRight)
             self.ui.pic_before_listWidget2.setFlow(QtWidgets.QListView.LeftToRight)
             self.ui.pic_style_listWidget2.setFlow(QtWidgets.QListView.LeftToRight)
+            # paras
+            # threads
+            self.my_deep_del = None
+            self.del_thread = None
+            self.changethread = None
+            self.gen_preview_pic = None
+            self.save_style_thread = None
+            self.sava_sceamless_style_style = None
+            self.mythread_temp = None
+            self.my_dds_thread = None
+            self.mythread3 = None
+            self.mythread_gen = None
+            self.mythread_temp3 = None
+            self.mythread_save3 = None
 
+            self.is_seamless = False
+            self.tem_file = ''
+            self.base = ''
             self.project_cwd = ''
             self.project_base = ''
+            self.txt_path = ''
+            self.tmp_list = []
+            self.tmp_before_list3 = []
+            self.pics_path_array = []
+            self.show_list = []
+            self.save_path1 = ''
+            # 复选框选中列表
+            self.chosen_file_list = []
+            # 预览路径
+            self.map_dir_omit = []
+            # checkcombobox预览的路径和真实路径的映射表
+            self.dir_dict = {}
             # 原图目录列表
             self.multi_dir_project = []
             # 目录相对路径
@@ -189,11 +221,13 @@ if __name__ == '__main__':
             # 点击选中风格图路径
             self.chosen_style_pic3 = ''
             self.chosen_style_pic2 = ''
+            self.chosen_style_pic = ''
             # 选中复选框
             self.chosen_file_list1 = []
+
             # 生成图片点击数
             self.combocheckbox2_button_clicked = 0
-
+            self.value_slider = 50
             # 多选图片导入tab中选中的原图数组
             self.chosen_content_list3 = []
             # 存放缩写路径和相对路径字典
@@ -228,6 +262,7 @@ if __name__ == '__main__':
             self.ui.savePic_button3.clicked.connect(self.save_all_tab_pics)
             self.ui.reset_button.clicked.connect(self.del_data)
             self.ui.delete_files_button.clicked.connect(self.del_deep)
+            self.ui.project_base_dir.textChanged.connect(self.base_dir_changed)
 
         # 更新日志
         def update_progress_info(self):
@@ -259,7 +294,6 @@ if __name__ == '__main__':
                 self.ui.pushButton.setEnabled(False)
                 self.ui.choose_pic_style_button2_2.setEnabled(False)
                 self.ui.savePic_button3.setEnabled(False)
-
             if GlobalConfig.b_sync_block_op_in_progress is False:
 
                 self.ui.make_project_dir_button.setEnabled(True)
@@ -268,15 +302,15 @@ if __name__ == '__main__':
                 self.ui.choose_pic_multi_file_dir_button1.setEnabled(True)
                 self.ui.Preview_button.setEnabled(True)
                 self.ui.choose_pic_style_button1.setEnabled(True)
-                self.ui.savePic_button1.setEnabled(True)
                 self.ui.choose_pic_txt_button2.setEnabled(True)
                 self.ui.gen_jpg_tga_button2.setEnabled(True)
                 self.ui.choose_pic_style_button2.setEnabled(True)
-                self.ui.savePic_button2.setEnabled(True)
                 self.ui.choose_pics_button3.setEnabled(True)
                 self.ui.pushButton.setEnabled(True)
                 self.ui.choose_pic_style_button2_2.setEnabled(True)
-                self.ui.savePic_button3.setEnabled(True)
+                self.ui.savePic_button1.setEnabled(False)
+                self.ui.savePic_button2.setEnabled(False)
+                self.ui.savePic_button3.setEnabled(False)
             if GlobalConfig.b_sync_block_in_thread_temp is True:
                 # 生成预览图时
                 self.ui.pic_style_listWidget1.setEnabled(False)
@@ -286,11 +320,64 @@ if __name__ == '__main__':
                 self.ui.pic_style_listWidget1.setEnabled(True)
                 self.ui.pic_style_listWidget2.setEnabled(True)
                 self.ui.pic_style_listWidget3.setEnabled(True)
+            if GlobalConfig.b_sync_block_op_in_progress is False and GlobalConfig.b_sync_block_init is True:
+                self.ui.choose_pic_multi_file_dir_button1.setEnabled(False)
+                self.ui.Preview_button.setEnabled(False)
+                self.ui.choose_pic_style_button1.setEnabled(False)
+                self.ui.savePic_button1.setEnabled(False)
+                self.ui.choose_pic_txt_button2.setEnabled(False)
+                self.ui.gen_jpg_tga_button2.setEnabled(False)
+                self.ui.choose_pic_style_button2.setEnabled(False)
+                self.ui.savePic_button2.setEnabled(False)
+                self.ui.choose_pics_button3.setEnabled(False)
+                self.ui.pushButton.setEnabled(False)
+                self.ui.choose_pic_style_button2_2.setEnabled(False)
+                self.ui.savePic_button3.setEnabled(False)
+            if GlobalConfig.b_sync_block_op_in_progress is False and GlobalConfig.b_sync_block_save_button is True:
+                self.ui.make_project_dir_button.setEnabled(True)
+                self.ui.make_project_dir_button.setEnabled(True)
+                self.ui.project_base_dir.setEnabled(True)
+                self.ui.choose_pic_multi_file_dir_button1.setEnabled(True)
+                self.ui.Preview_button.setEnabled(True)
+                self.ui.choose_pic_style_button1.setEnabled(True)
+                self.ui.choose_pic_txt_button2.setEnabled(True)
+                self.ui.gen_jpg_tga_button2.setEnabled(True)
+                self.ui.choose_pic_style_button2.setEnabled(True)
+                self.ui.choose_pics_button3.setEnabled(True)
+                self.ui.pushButton.setEnabled(True)
+                self.ui.choose_pic_style_button2_2.setEnabled(True)
+                self.ui.savePic_button1.setEnabled(True)
+                self.ui.savePic_button2.setEnabled(True)
+                self.ui.savePic_button3.setEnabled(True)
+            # if GlobalConfig.b_sync_block_op_in_progress is False and GlobalConfig.b_sync_block_second_step is True:
+            #     self.ui.Preview_button.setEnabled(False)
+            #     self.ui.choose_pic_style_button1.setEnabled(False)
+            #     self.ui.savePic_button1.setEnabled(False)
+            #     self.ui.gen_jpg_tga_button2.setEnabled(False)
+            #     self.ui.choose_pic_style_button2.setEnabled(False)
+            #     self.ui.savePic_button2.setEnabled(False)
+            #     self.ui.pushButton.setEnabled(False)
+            #     self.ui.choose_pic_style_button2_2.setEnabled(False)
+            #     self.ui.savePic_button3.setEnabled(False)
+
+        # 根目录变动事件
+        def base_dir_changed(self):
+            if os.path.isdir(self.ui.project_base_dir.text()):
+                InfoNotifier.InfoNotifier.g_progress_info.append("工作目录为："+self.ui.project_base_dir.text())
+                with open('./base_dir_log.txt', 'w')as f:
+                    f.write(f"{self.ui.project_base_dir.text()}\n")
+                GlobalConfig.b_sync_block_init = False
+                QApplication.processEvents()
+            else:
+                GlobalConfig.b_sync_block_init = True
+                QApplication.processEvents()
+                InfoNotifier.InfoNotifier.g_progress_info.append("您加入的不是目录，请重新选择目录！")
 
         # 清除数据
         def del_data(self):
             # self.ui.project_base_dir.clear()
             self.combocheckBox1.clearEditText()
+            self.combocheckBox1.setEnabled(False)
             self.ui.pic_before_label2.clear()
             self.ui.pic_before_listWidget2.clear()
             self.ui.pic_style_label2.clear()
@@ -316,8 +403,43 @@ if __name__ == '__main__':
                 InfoNotifier.InfoNotifier.g_progress_info.append("已恢复初始界面")
             except BaseException as be:
                 print(be)
-
+            self.tmp_list = []
             self.chosen_content_list3 = []
+            self.ui.change_coe_horizontalSlider1.setValue(50)
+            self.ui.change_coe_horizontalSlider2.setValue(50)
+            self.ui.change_coe_horizontalSlider3.setValue(50)
+
+            # threads
+            self.my_deep_del = None
+            self.del_thread = None
+            self.changethread = None
+            self.gen_preview_pic = None
+            self.save_style_thread = None
+            self.sava_sceamless_style_style = None
+            self.mythread_temp = None
+            self.my_dds_thread = None
+            self.mythread3 = None
+            self.mythread_gen = None
+            self.mythread_temp3 = None
+            self.mythread_save3 = None
+
+            self.is_seamless = False
+            self.tem_file = ''
+            self.base = ''
+            self.project_cwd = ''
+            self.project_base = ''
+            self.txt_path = ''
+            self.tmp_list = []
+            self.tmp_before_list3 = []
+            self.pics_path_array = []
+            self.show_list = []
+            self.save_path1 = ''
+            # 复选框选中列表
+            self.chosen_file_list = []
+            # 预览路径
+            self.map_dir_omit = []
+            # checkcombobox预览的路径和真实路径的映射表
+            self.dir_dict = {}
             # 原图目录列表
             self.multi_dir_project = []
             # 目录相对路径
@@ -329,11 +451,13 @@ if __name__ == '__main__':
             # 点击选中风格图路径
             self.chosen_style_pic3 = ''
             self.chosen_style_pic2 = ''
+            self.chosen_style_pic = ''
             # 选中复选框
             self.chosen_file_list1 = []
+
             # 生成图片点击数
             self.combocheckbox2_button_clicked = 0
-
+            self.value_slider = 50
             # 多选图片导入tab中选中的原图数组
             self.chosen_content_list3 = []
             # 存放缩写路径和相对路径字典
@@ -345,7 +469,6 @@ if __name__ == '__main__':
             self.my_deep_del.set_para(self.ui.project_base_dir.text())
             self.my_deep_del.start()
 
-
         # 选根目录
         def make_project_dir(self):
             directory = QtWidgets.QFileDialog.getExistingDirectory(self, "选择文件夹", "./")
@@ -354,6 +477,8 @@ if __name__ == '__main__':
             self.ui.project_base_dir.setText(directory)
             with open('./base_dir_log.txt', 'w')as f:
                 f.write(f"{directory}\n")
+            GlobalConfig.b_sync_block_init = False
+            QApplication.processEvents()
 
         # 查看图片通道数
         def get_channel_num(self, img_path=''):
@@ -374,7 +499,7 @@ if __name__ == '__main__':
             directory = QtWidgets.QFileDialog.getExistingDirectory(self, "选择文件夹", self.ui.project_base_dir.text())
             if len(directory) == 0:
                 return
-            directory_temp=directory.split('/')
+            directory_temp = directory.split('/')
             if directory_temp[-2]+'/'+directory_temp[-1] not in self.multi_dir_project:
                 rela_path = directory.replace(self.ui.project_base_dir.text()+'/', "")
                 self.files_dict[directory_temp[-2]+'/'+directory_temp[-1]] = rela_path
@@ -390,8 +515,59 @@ if __name__ == '__main__':
             self.ui.pic_style_listWidget1.clear()
             # InfoNotifier.InfoNotifier.style_preview_pic_dir.clear()
             files, filetype = QFileDialog.getOpenFileNames(self, "选择文件", "./", "JPG文件(*.jpg)")
-            #
             if len(files) == 0:
+                style_img_icon = []
+                for pic in self.Choosed_style_pics_list:
+                    pix = QPixmap(pic)
+                    icon = QIcon()
+                    icon.addPixmap(pix)
+                    style_img_icon.append(icon)
+                index = 0
+                while index < len(self.Choosed_style_pics_list):
+                    item = QListWidgetItem()
+                    item.setIcon(style_img_icon[index])
+                    item.setSizeHint(QSize(100, 100))
+                    item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                    self.ui.pic_style_listWidget1.addItem(item)
+                    index += 1
+                iconsize = QSize(100, 100)
+                self.ui.pic_style_listWidget1.setIconSize(iconsize)
+                QApplication.processEvents()
+            else:
+                pic_dir = ""
+                for file in files:
+                    # 如果图片不是三通道，跳过
+                    if self.get_channel_num(file) != 3:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(file+' 为四通道图片，请选择三通道jpg格式图片！')
+                    elif file in self.Choosed_style_pics_list:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(file+' 已选过')
+                    else:
+                        pic_dir += file + ';;'
+                if pic_dir == '':
+                    style_img_icon = []
+                    for pic in self.Choosed_style_pics_list:
+                        pix = QPixmap(pic)
+                        icon = QIcon()
+                        icon.addPixmap(pix)
+                        style_img_icon.append(icon)
+                    index = 0
+                    while index < len(self.Choosed_style_pics_list):
+                        item = QListWidgetItem()
+                        item.setIcon(style_img_icon[index])
+                        item.setSizeHint(QSize(100, 100))
+                        item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+                        self.ui.pic_style_listWidget1.addItem(item)
+                        index += 1
+                    iconsize = QSize(100, 100)
+                    self.ui.pic_style_listWidget1.setIconSize(iconsize)
+                    QApplication.processEvents()
+                    return
+                pic_dir = pic_dir[:-2]
+                pic_dir = pic_dir.split(";;")
+                for i in pic_dir:
+                    self.Choosed_style_pics_list.append(i)
+                print(self.Choosed_style_pics_list)
+
                 style_img_icon = []
                 for pic in self.Choosed_style_pics_list:
                     pix = QPixmap(pic)
@@ -409,67 +585,6 @@ if __name__ == '__main__':
                     index += 1
                 iconsize = QSize(100, 100)
                 self.ui.pic_style_listWidget1.setIconSize(iconsize)
-
-                QApplication.processEvents()
-
-            else:
-                pic_dir = ""
-                for file in files:
-                    #如果图片不是三通道，跳过
-                    if self.get_channel_num(file) != 3:
-                        InfoNotifier.InfoNotifier.g_progress_info.append(file+' 为四通道图片，请选择三通道jpg格式图片！')
-                    elif file in self.Choosed_style_pics_list:
-                        InfoNotifier.InfoNotifier.g_progress_info.append(file+' 已选过')
-                    else:
-                        pic_dir += file + ';;'
-                # print(pic_dir)
-                if pic_dir == '':
-                    style_img_icon = []
-                    for pic in self.Choosed_style_pics_list:
-                        pix = QPixmap(pic)
-                        icon = QIcon()
-                        icon.addPixmap(pix)
-                        style_img_icon.append(icon)
-                    index = 0
-                    while index < len(self.Choosed_style_pics_list):
-                        item = QListWidgetItem()
-                        item.setIcon(style_img_icon[index])
-                        item.setSizeHint(QSize(100, 100))
-                        item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-
-                        self.ui.pic_style_listWidget1.addItem(item)
-                        index += 1
-                    iconsize = QSize(100, 100)
-                    self.ui.pic_style_listWidget1.setIconSize(iconsize)
-
-                    QApplication.processEvents()
-                    return
-
-                pic_dir = pic_dir[:-2]
-
-                pic_dir = pic_dir.split(";;")
-                for i in pic_dir:
-                    self.Choosed_style_pics_list.append(i)
-                print(self.Choosed_style_pics_list)
-
-                style_img_icon=[]
-                for pic in self.Choosed_style_pics_list:
-                    pix = QPixmap(pic)
-                    icon = QIcon()
-                    icon.addPixmap(pix)
-                    style_img_icon.append(icon)
-                index = 0
-                while index < len(self.Choosed_style_pics_list):
-                    item = QListWidgetItem()
-                    item.setIcon(style_img_icon[index])
-                    item.setSizeHint(QSize(100, 100))
-                    item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-
-                    self.ui.pic_style_listWidget1.addItem(item)
-                    index += 1
-                iconsize = QSize(100,100)
-                self.ui.pic_style_listWidget1.setIconSize(iconsize)
-
                 QApplication.processEvents()
 
         def gen_dds_jpg(self):
@@ -505,7 +620,6 @@ if __name__ == '__main__':
                     tmp = glob.glob(self.ui.project_base_dir.text()+'/'+self.files_dict[dire]+'/*.dds')[0]
                     tmp = self.files_dict[dire]+'/'+os.path.basename(tmp)
                     get_path = PathUtils(_work=self.ui.project_base_dir.text(), dds_path=tmp)
-
                     previem_list.append(get_path.dds_to_jpg_path())
                 self.show_list = previem_list
                 for pic in previem_list:
@@ -523,7 +637,6 @@ if __name__ == '__main__':
                     index += 1
                 iconsize = QSize(100, 100)
                 self.ui.pic_before_listWidget1.setIconSize(iconsize)
-
                 QApplication.processEvents()
             except BaseException as e:
                 print(e)
@@ -573,9 +686,9 @@ if __name__ == '__main__':
         def show_style_pic_in_label(self, i):
             # 预览风格图
             show_list = self.Choosed_style_pics_list
-            dir = show_list[i]
-            self.chosen_style_pic = dir
-            pix = QPixmap(dir)
+            dirs = show_list[i]
+            self.chosen_style_pic = dirs
+            pix = QPixmap(dirs)
             self.ui.pic_style_label1.setPixmap(pix)
             self.ui.pic_style_label1.setScaledContents(True)
 
@@ -593,9 +706,6 @@ if __name__ == '__main__':
                 content_pic = self.show_list[content_index]
                 get_path = PathTemp(jpg_path_=content_pic, style_path_=self.chosen_style_pic)
                 s_name = os.path.basename(self.chosen_style_pic).split('.')[0]
-                # after_pic_dir = os.path.dirname(content_pic) + '/temp/' + s_name + '/' + os.path.basename(
-                #         content_pic)
-                # self.save_path1 = os.path.dirname(content_pic) + '/temp/lerp.jpg'
                 self.value_slider = self.ui.change_coe_horizontalSlider1.value()
                 after_pic_dir = get_path.get_temp_after_jpg_path()
                 self.save_path1 = get_path.get_temp_lerp_path()
@@ -609,7 +719,7 @@ if __name__ == '__main__':
                 self.ui.pic_after_label1.addItem(item)
             except BaseException as e:
                 print(e)
-                InfoNotifier.InfoNotifier.g_progress_info.append("请等待生成预览图片")
+                # InfoNotifier.InfoNotifier.g_progress_info.append("请等待生成预览图片")
 
         def is_seamless_ornot(self):
             # 是否生成无缝贴图
@@ -622,6 +732,9 @@ if __name__ == '__main__':
         def save_style(self):
             # 保存
             try:
+                if self.chosen_style_pic == '':
+                    InfoNotifier.InfoNotifier.g_progress_info.append("没有选择风格图片！")
+                    return
                 InfoNotifier.InfoNotifier.g_progress_info.append("开始存储风格图片·········")
                 # 勾选目录
                 chosen_content_file_list = self.combocheckBox2.Selectlist()
@@ -632,7 +745,7 @@ if __name__ == '__main__':
 
                 base = self.ui.project_base_dir.text()
 
-                style_path=self.chosen_style_pic
+                style_path = self.chosen_style_pic
 
                 self.is_seamless = self.is_seamless_ornot()
                 if self.is_seamless is False:
@@ -674,15 +787,7 @@ if __name__ == '__main__':
             with open(".\\data.json", 'r') as f:
                 # print(f)
                 import os
-                # 以下三个表都是相对路径
-                # 预览路径
-                self.map_dir_omit = []
-
-                # checkcombobox预览的路径和真实路径的映射表
-                self.dir_dict = {}
-
                 self.pics_path_array = []
-
                 temp = json.loads(f.read())
                 fw = open(self.txt_path, "r", encoding="utf-8-sig")
                 for file in fw:
@@ -693,23 +798,31 @@ if __name__ == '__main__':
 
                     # 过滤出 XXX/baked;XXX/env_probe;XXX/landscape/procedural 路径
                     if len(file_split) >= 3:
+
                         if file_split[-1] == 'baked' and file_split[-3] == 'maps':
+
                             self.pics_path_array.append(file_path)
                             if f'./{file_split[-2]}/{file_split[-1]}' not in self.map_dir_omit:
+
                                 self.map_dir_omit.append(f'./{file_split[-2]}/{file_split[-1]}')
-                                # self.map_full_dir.append(parent_path)
-                                self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}']=parent_path
+                                self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}'] = parent_path
+
                         if file_split[-1] == 'env_probe' and file_split[-3] == 'maps':
+
                             self.pics_path_array.append(file_path)
                             if f'./{file_split[-2]}/{file_split[-1]}' not in self.map_dir_omit:
+
                                 self.map_dir_omit.append(f'./{file_split[-2]}/{file_split[-1]}')
-                                # self.map_full_dir.append(parent_path)
-                                self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}']=parent_path
+                                self.dir_dict[f'./{file_split[-2]}/{file_split[-1]}'] = parent_path
+
                         if file_split[-1] == 'procedural' and file_split[-2] == 'landscape':
+
                             self.pics_path_array.append(file_path)
                             if f'./{file_split[-3]}/{file_split[-2]}/{file_split[-1]}' not in self.map_dir_omit:
+
                                 self.map_dir_omit.append(f'./{file_split[-3]}/{file_split[-2]}/{file_split[-1]}')
-                                self.dir_dict[f'./{file_split[-3]}/{file_split[-2]}/{file_split[-1]}']=parent_path
+                                self.dir_dict[f'./{file_split[-3]}/{file_split[-2]}/{file_split[-1]}'] = parent_path
+
                     # 过滤出预先在data.json设置的路径
                     if parent_path not in temp:
                         continue
@@ -730,30 +843,36 @@ if __name__ == '__main__':
                 file = self.txt_path
                 work_ = self.ui.project_base_dir.text()+'/'
                 work_ = work_.replace("/", "\\")
-                # 带转换的图片列表
+                # 待转换的图片列表
                 dds_list = self.pics_path_array
-
+                if file == '' or dds_list == []:
+                    InfoNotifier.InfoNotifier.g_progress_info.append("请先选择txt文件!")
+                    return
                 self.my_dds_thread = tab_txt_thread.MyGenDdsJpgThreadTabTxt()
                 self.my_dds_thread.set_para(file, work_, dds_list)
                 self.my_dds_thread.start()
             except BaseException as be:
                 print(be)
-                InfoNotifier.InfoNotifier.g_progress_info.append("请先选择txt文件")
+                InfoNotifier.InfoNotifier.g_progress_info.append("请先选择txt文件!")
 
         def show_previewed_before_pic_tab_txt(self):
             # 生成原图的略缩图
             try:
+                if self.combocheckBox1.Selectlist() != [] and self.Choosed_style_pics_list2 != []:
+                    GlobalConfig.b_sync_block_save_button = True
+                    QApplication.processEvents()
                 self.ui.pic_before_listWidget2.clear()
                 self.ui.pic_before_label2.clear()
                 style_img_icon = []
                 self.chosen_file_list = self.combocheckBox1.Selectlist()
                 print(self.chosen_file_list)
-                preview_list=[]
+                preview_list = []
+                self.tmp_list = []
                 for dire in self.chosen_file_list:
                     fw = open(self.txt_path, "r", encoding="utf-8-sig")
                     for f in fw:
-                        f=f.replace("\n", "").replace("\\", "/")
-                        path=self.dir_dict[dire]
+                        f = f.replace("\n", "").replace("\\", "/")
+                        path = self.dir_dict[dire]
                         if self.dir_dict[dire] == os.path.dirname(f):
                             preview_list.append(f)
                             break
@@ -761,12 +880,12 @@ if __name__ == '__main__':
                 for i in range(len(preview_list)):
                     get_path_class = PathUtils(_work=self.ui.project_base_dir.text(), dds_path=preview_list[i])
                     dir = get_path_class.dds_to_jpg_path()
-                    preview_list[i] = dir
-                print(preview_list)
-                self.tmp_list = preview_list
+                    if os.path.exists(dir) is False:
+                        continue
+                    self.tmp_list.append(dir)
                 print(self.tmp_list)
                 if len(self.tmp_list) == 0:
-                    InfoNotifier.InfoNotifier.g_progress_info.append("不存在对应jpg格式图片，请先转换格式")
+                    InfoNotifier.InfoNotifier.g_progress_info.append("请先勾选目录进行预览，如不存在对应jpg格式图片，请先点击生成图片。")
                     return
                 for pic in self.tmp_list:
                     pix = QPixmap(pic)
@@ -885,9 +1004,12 @@ if __name__ == '__main__':
                     item.setTextAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
                     self.ui.pic_style_listWidget2.addItem(item)
                     index += 1
-                iconsize = QSize(100,100)
+                iconsize = QSize(100, 100)
                 self.ui.pic_style_listWidget2.setIconSize(iconsize)
 
+                QApplication.processEvents()
+            if self.combocheckBox1.Selectlist() != [] and self.Choosed_style_pics_list2 != []:
+                GlobalConfig.b_sync_block_save_button = True
                 QApplication.processEvents()
 
         def pic_style_clicked_tab_txt(self):
@@ -931,9 +1053,6 @@ if __name__ == '__main__':
                 content_index = self.ui.pic_before_listWidget2.currentIndex().row()
                 content_pic = self.tmp_list[content_index]
                 get_path=PathTemp(jpg_path_=content_pic, style_path_=self.chosen_style_pic2)
-                # s_name = os.path.basename(self.chosen_style_pic2).split('.')[0]
-                # after_pic_dir = os.path.dirname(content_pic)+'/temp/'+s_name+'/'+os.path.basename(content_pic)
-                # save_path2 = os.path.dirname(content_pic) + '/temp/lerp.jpg'
                 after_pic_dir = get_path.get_temp_after_jpg_path()
                 save_path2 = get_path.get_temp_lerp_path()
                 self.value_slider = self.ui.change_coe_horizontalSlider2.value()
@@ -947,7 +1066,7 @@ if __name__ == '__main__':
                 self.ui.pic_after_label2.addItem(item)
             except BaseException as e:
                 print('preview_after_pic_in_label_tab_txt', e)
-                InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图或等待生成预览图片")
+                # InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图或等待生成预览图片,如未加入原图，请加入原图并生成预览图片！")
 
         def is_seamless_ornot_tab_txt(self):
             if self.ui.is_seamless_ornot_comboBox2.currentText() == "否":
@@ -958,6 +1077,9 @@ if __name__ == '__main__':
 
         def save_style_tab_txt(self):
             try:
+                if self.chosen_style_pic2 == '' or self.combocheckBox1.Selectlist() == []:
+                    InfoNotifier.InfoNotifier.g_progress_info.append("没有选择风格图片或原图！")
+                    return
                 InfoNotifier.InfoNotifier.g_progress_info.append("开始保存··············")
                 txt_file = self.txt_path
                 work_ = self.ui.project_base_dir.text()
@@ -1148,11 +1270,7 @@ if __name__ == '__main__':
             dirs = show_list[i]
             self.chosen_style_pic3 = dirs
             pix = QPixmap(dirs)
-
-            # pix=pix.scaled(200, 200)
-            # pix=pix.fromImage(pix)
             self.ui.pic_style_label3.setPixmap(pix)
-            # self.ui.pic_style_label1.setFixedSize(QSize(250,250))
             self.ui.pic_style_label3.setScaledContents(True)
 
         def make_temp_previewed_tab_pics(self):
@@ -1166,9 +1284,7 @@ if __name__ == '__main__':
                     if len(preview_file_list) == 0:
                         return
                     tmp_file = preview_file_list[0]
-                    get_path=PathTemp(jpg_path_=tmp_file)
-                    # parent_tmp = os.path.dirname(tmp_file)
-                    # tem_file = parent_tmp + '/temp/'
+                    get_path = PathTemp(jpg_path_=tmp_file)
                     tem_file = get_path.get_temp_dir_path()
                     self.tem_file = tem_file
                     self.mythread_temp3 = tab_specific_pics_thread.MyGenStyleTempThreadTabPics()
@@ -1186,11 +1302,8 @@ if __name__ == '__main__':
 
                 content_index = self.ui.pic_before_listWidget3.currentIndex().row()
                 content_pic = self.tmp_before_list3[content_index]
-                get_path = PathTemp(jpg_path_=content_pic,style_path_=self.chosen_style_pic3)
-                # s_name = os.path.basename(self.chosen_style_pic3).split('.')[0]
-                # after_pic_dir = os.path.dirname(content_pic)+'/temp/'+s_name+'/'+os.path.basename(content_pic)
+                get_path = PathTemp(jpg_path_=content_pic, style_path_=self.chosen_style_pic3)
                 after_pic_dir = get_path.get_temp_after_jpg_path()
-                # self.save_path1 = self.tem_file + 'lerp.jpg'
                 self.save_path1 = get_path.get_temp_lerp_path()
                 self.value_slider = self.ui.change_coe_horizontalSlider3.value()
                 img, _ = gen_lerp_ret.lerp_img(content_pic, after_pic_dir, float(self.value_slider))
@@ -1204,7 +1317,7 @@ if __name__ == '__main__':
 
             except BaseException as e:
                 print(e)
-                InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图片，再等待生成预览图片")
+                # InfoNotifier.InfoNotifier.g_progress_info.append("请选择一张风格图片，再等待生成预览图片")
 
         def is_seamless_ornot_tab_pics(self):
             if self.ui.is_seamless_ornot_comboBox3.currentText() == "否":
@@ -1212,7 +1325,9 @@ if __name__ == '__main__':
             return True
 
         def save_all_tab_pics(self):
-
+            if self.chosen_style_pic3 == '':
+                InfoNotifier.InfoNotifier.g_progress_info.append("没有选择风格图片！")
+                return
             style_path = self.chosen_style_pic3
             content_list = self.chosen_content_list3
             lerp_value = self.ui.change_coe_horizontalSlider3.value()

@@ -123,7 +123,8 @@ class MyGenStyleThreadTabTxt(QThread):
             if flag is True:
                 # file_real_path=self.work_+'/'+file
                 # file_name = os.path.basename(file)
-                get_path = PathUtils(self.work_, self.chosen_style_pic, file)
+                get_path = PathUtils(_work=self.work_, _style_path=self.chosen_style_pic, dds_path=file,
+                                     txt_file_=self.txt_path)
                 jpg_path = get_path.dds_to_jpg_path()
                 tga_path = get_path.dds_to_tga_path()
 
@@ -153,7 +154,7 @@ class MyGenStyleThreadTabTxt(QThread):
                 print(f"generate tga image {lerp_out_path} after lerp op.")
                 InfoNotifier.InfoNotifier.g_progress_info.append(f"生成插值操作后的tga图片{lerp_out_path} ")
 
-                dds_out = get_path.get_dds_output_path()
+                dds_out = get_path.get_dds_output_path_txt()
                 if os.path.exists(dds_out) is False:
                     os.makedirs(dds_out)
                 main_cmd = f"{self.texconv_path} -dxt5 -file {lerp_out_path} -outdir {dds_out}"
@@ -261,7 +262,7 @@ class MyGenSeamlessThreadTabTxt(QThread):
                     break
 
             if flag is True:
-                get_path = PathUtils(self.work_, self.chosen_style_pic, file)
+                get_path = PathUtils(self.work_, self.chosen_style_pic, file, self.txt_path)
                 file_real_path = get_path.real_dds_path()
                 file_name = os.path.basename(file_real_path)
 
@@ -308,7 +309,8 @@ class MyGenSeamlessThreadTabTxt(QThread):
                 img_crop.save(get_path.get_seamless_path(), quality=100)
                 InfoNotifier.InfoNotifier.g_progress_info.append('生成无缝贴图' + get_path.get_seamless_path())
 
-                dds_output = get_path.get_seamless_dds_path()
+                # dds_output = get_path.get_seamless_dds_path()
+                dds_output = get_path.get_dds_output_path_txt()
                 if os.path.exists(dds_output) is False:
                     os.makedirs(dds_output)
                 main_cmd = f"{self.texconv_path} -dxt5 -file {get_path.get_seamless_path()} -outdir {dds_output}"

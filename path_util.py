@@ -2,7 +2,7 @@ import os
 
 
 class PathUtils:
-    def __init__(self, _work='', _style_path='', dds_path=''):
+    def __init__(self, _work='', _style_path='', dds_path='', txt_file_=''):
         # self.ui = ui.Ui_MainWindow()
         self.work_ = _work.replace("\n", "").replace("\\", "/")
         self.style_path = _style_path.replace("\n", "").replace("\\", "/")
@@ -10,6 +10,7 @@ class PathUtils:
         self.file_name_jpg = os.path.basename(self.dds_path.replace('.dds', '.jpg'))
         self.file_name_tga = os.path.basename(self.dds_path.replace('.dds', '.tga'))
         self.work_output = self.work_ + '/data/style_transfer'
+        self.txt_name = os.path.basename(txt_file_).split('.')[0]
 
     # dds原图真实路径
     def real_dds_path(self):
@@ -17,7 +18,7 @@ class PathUtils:
 
     # 原图转 jpg 保存地址
     def dds_to_jpg_path(self):
-        return self.work_output +'/'+ self.dds_path.replace('.dds', '.jpg')
+        return self.work_output + '/' + self.dds_path.replace('.dds', '.jpg')
 
     # 原图转 tga 保存地址
     def dds_to_tga_path(self):
@@ -47,6 +48,9 @@ class PathUtils:
     # dds图
     def get_dds_output_path(self):
         return f"{self.work_output}/{self.get_parent_name()}/dds_output/{self.get_style_name()}/"
+    # dds图-txt
+    def get_dds_output_path_txt(self):
+        return f"{self.work_output}/final_output/{self.txt_name}/{self.get_style_name()}/{self.get_parent_name()}/"
 
     # expanded jpg,tga
     def get_expanded_jpg_path(self):
@@ -99,8 +103,9 @@ class PathTemp:
 
 if __name__ == '__main__':
     a = PathUtils(_work='H:/sword3-products-head/client',
-                  _style_path='E:/Users/shishaohua.SHISHAOHUA1/PycharmProjects/style_swaper/style_swaper/style_test/1.jpg',
-                  dds_path='data/source/maps_source/texture/wj_gb路标003_01h.dds')
+                  _style_path=
+                  'E:/Users/shishaohua.SHISHAOHUA1/PycharmProjects/style_swaper/style_swaper/style_test/1.jpg',
+                  dds_path='data/source/maps_source/texture/wj_gb路标003_01h.dds', txt_file_='G:/稻香村.txt')
 
 
     print(a.real_dds_path())
@@ -113,6 +118,7 @@ if __name__ == '__main__':
     print(a.get_jpg_lerp_path())
     print(a.get_tga_lerp_path())
     print(a.get_dds_output_path())
+    print(a.get_dds_output_path_txt())
     print(a.get_expanded_jpg_path())
     print(a.get_expanded_tga_path())
     print(a.get_expanded_style_path())
