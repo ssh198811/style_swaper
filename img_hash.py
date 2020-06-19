@@ -12,6 +12,16 @@ def make_pics_dict(pics_list=[],s_dict={}):
         s_dict[s_name] = img_hash(pic)
 
 def search_pics_dict(pics,s_dict={},s_differ=False):
+        """
+        Args:
+            pics: style image
+            s_dict: style name -> hash value
+            s_differ: 'True' means same style name but different image
+
+        Returns:
+            different or not
+
+        """
         s_name = os.path.basename(pics).split('.')[0]
         pics_hash = img_hash(pics)
         print(pics_hash)

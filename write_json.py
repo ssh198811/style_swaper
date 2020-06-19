@@ -56,7 +56,7 @@ if __name__ == "__main__":
             parent_path = os.path.dirname(file_path)
             # print(parent_path)
             file_split=parent_path.split("/")
-            if len(file_split)>=3:
+            if len(file_split) >=3:
                 if file_split[-1]=='baked' and file_split[-3]=='maps' and f'./{file_split[-2]}/{file_split[-1]}' not in a:
                     a.append(f'./{file_split[-2]}/{file_split[-1]}')
                 if file_split[-1]=='env_probe' and file_split[-3]=='maps' and f'./{file_split[-2]}/{file_split[-1]}' not  in a :
