@@ -232,7 +232,7 @@ class MyGenSeamlessStyleThreadTabFiles(QThread):
                     img_crop.save(get_path.get_seamless_path(), quality=100)
                     InfoNotifier.InfoNotifier.g_progress_info.append('生成无缝贴图' + get_path.get_seamless_path())
                     # dds
-                    dds_output = get_path.get_seamless_dds_path()
+                    dds_output = get_path.get_dds_output_path()
                     if os.path.exists(dds_output) is False:
                         os.makedirs(dds_output)
                     main_cmd = f"{self.texconv_path} -dxt5 -file {get_path.get_seamless_path()} -outdir {dds_output}"

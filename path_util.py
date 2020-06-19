@@ -47,7 +47,7 @@ class PathUtils:
 
     # dds图
     def get_dds_output_path(self):
-        return f"{self.work_output}/{self.get_parent_name()}/dds_output/{self.get_style_name()}/"
+        return f"{self.work_output}/final_output/{self.get_style_name()}/{self.get_parent_name()}/"
     # dds图-txt
     def get_dds_output_path_txt(self):
         return f"{self.work_output}/final_output/{self.txt_name}/{self.get_style_name()}/{self.get_parent_name()}/"

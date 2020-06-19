@@ -33,7 +33,7 @@ font: 12pt &quot;Arial&quot;;</string>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTabWidget" name="SpecPic">
     <property name="enabled">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
@@ -78,7 +78,7 @@ font: 12pt &quot;Arial&quot;;</string>
     </property>
     <widget class="QWidget" name="txt">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <attribute name="title">
       <string notr="true">TXT路径导入</string>
@@ -198,6 +198,9 @@ color: rgb(212, 212, 212);</string>
       </property>
      </widget>
      <widget class="QPushButton" name="choose_pic_txt_button2">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -294,6 +297,9 @@ font: 12pt &quot;Arial&quot;;</string>
       </property>
      </widget>
      <widget class="QComboBox" name="is_seamless_ornot_comboBox2">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>1020</x>
@@ -481,6 +487,9 @@ color: rgb(212, 212, 212);</string>
       </property>
      </widget>
      <widget class="QComboBox" name="picpath_bef_comboBox">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>30</x>
@@ -1507,12 +1516,12 @@ color: rgb(255, 251, 252);</string>
     </property>
    </widget>
    <zorder>make_project_dir_button</zorder>
-   <zorder>SpecPic</zorder>
    <zorder>project_base_dir</zorder>
    <zorder>progress_Info</zorder>
    <zorder>label</zorder>
    <zorder>reset_button</zorder>
    <zorder>delete_files_button</zorder>
+   <zorder>SpecPic</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action3">

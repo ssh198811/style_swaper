@@ -149,7 +149,6 @@ if __name__ == '__main__':
             self.combocheckBox2.setStyleSheet("background-color: rgb(90, 90, 90);\n"
                                               "color: rgb(0, 0, 0);")
             self.combocheckBox2.setEnabled(False)
-            GlobalConfig.b_sync_block_init = True
             QApplication.processEvents()
             # 预览图片数
             self.preview_num = 3
@@ -378,6 +377,8 @@ if __name__ == '__main__':
             # self.ui.project_base_dir.clear()
             self.combocheckBox1.clearEditText()
             self.combocheckBox1.setEnabled(False)
+            self.combocheckBox2.clearEditText()
+            self.combocheckBox2.setEnabled(False)
             self.ui.pic_before_label2.clear()
             self.ui.pic_before_listWidget2.clear()
             self.ui.pic_style_label2.clear()
@@ -586,6 +587,9 @@ if __name__ == '__main__':
                 iconsize = QSize(100, 100)
                 self.ui.pic_style_listWidget1.setIconSize(iconsize)
                 QApplication.processEvents()
+            if self.combocheckBox2.Selectlist() != [] and self.Choosed_style_pics_list != []:
+                GlobalConfig.b_sync_block_save_button = True
+                QApplication.processEvents()
 
         def gen_dds_jpg(self):
             # 生成jpg,tga格式图片
@@ -598,7 +602,8 @@ if __name__ == '__main__':
                 InfoNotifier.InfoNotifier.g_progress_info.append("请先为工程创建根目录")
             else:
                 if len(self.multi_relative_dir)==0:
-                    self.ui.progress_Info.append("请先勾选待操作文件目录")
+                    self.ui.progress_Info.append("请先加入文件目录")
+                    return
                 else:
                     self.ui.progress_Info.append("开始转换dds贴图为jpg,tga格式")
                     QApplication.processEvents()
@@ -611,14 +616,29 @@ if __name__ == '__main__':
         def show_previewed_before_pic(self):
             # 预览原图
             try:
+                if self.combocheckBox2.Selectlist() != [] and self.Choosed_style_pics_list != []:
+                    GlobalConfig.b_sync_block_save_button = True
+                    QApplication.processEvents()
                 self.ui.pic_before_listWidget1.clear()
                 style_img_icon = []
                 self.chosen_file_list1 = self.combocheckBox2.Selectlist()
                 print(self.chosen_file_list1)
                 previem_list = []
                 for dire in self.chosen_file_list1:
-                    tmp = glob.glob(self.ui.project_base_dir.text()+'/'+self.files_dict[dire]+'/*.dds')[0]
-                    tmp = self.files_dict[dire]+'/'+os.path.basename(tmp)
+                    tmp = glob.glob(self.ui.project_base_dir.text()+'/'+self.files_dict[dire]+'/*.dds')
+                    # 识别不存在图片的路径
+                    if tmp == []:
+                        InfoNotifier.InfoNotifier.g_progress_info.append(self.ui.project_base_dir.text()+'/' +
+                                                                         self.files_dict[dire]+' 不存在图片！')
+                        # index = None
+                        # for i in range(1, self.combocheckBox2.row_num):
+                        #     print(self.combocheckBox2.itemText(i))
+                        #     if self.multi_dir_project[i] == dire:
+                        #         index = i
+                        # self.combocheckBox2.removeItem(index)
+                        # QApplication.processEvents()
+                        continue
+                    tmp = self.files_dict[dire]+'/'+os.path.basename(tmp[0])
                     get_path = PathUtils(_work=self.ui.project_base_dir.text(), dds_path=tmp)
                     previem_list.append(get_path.dds_to_jpg_path())
                 self.show_list = previem_list
@@ -1119,10 +1139,16 @@ if __name__ == '__main__':
 
         def gen_jpg_tga_tab_pics(self):
             # self.ui.choose_pics_button3.setEnabled(False)
+            if self.chosen_content_list3 == []:
+                InfoNotifier.InfoNotifier.g_progress_info.append("请先加入图片！")
+                return
             self.base = self.ui.project_base_dir.text()
             self.mythread_gen = tab_specific_pics_thread.MyGenDdsJpgThreadTabPics()
             self.mythread_gen.set_para(self.chosen_content_list3, self.ui.project_base_dir.text())
             self.mythread_gen.start()
+            if self.Choosed_style_pics_list3 != [] and self.chosen_content_list3 != []:
+                GlobalConfig.b_sync_block_save_button = True
+                QApplication.processEvents()
 
         def preview_before_in_widget_tab_pics(self):
             self.ui.pic_before_listWidget3.clear()
@@ -1252,6 +1278,9 @@ if __name__ == '__main__':
                 iconsize = QSize(100, 100)
                 self.ui.pic_style_listWidget3.setIconSize(iconsize)
 
+                QApplication.processEvents()
+            if self.Choosed_style_pics_list3 != [] and self.chosen_content_list3 != []:
+                GlobalConfig.b_sync_block_save_button = True
                 QApplication.processEvents()
 
         def pic_style_clicked_tab_pics(self):
