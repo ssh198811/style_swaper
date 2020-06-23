@@ -118,7 +118,7 @@ class Ui_MainWindow(object):
         self.line_24.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line_24.setObjectName("line_24")
         self.is_seamless_ornot_comboBox2 = QtWidgets.QComboBox(self.txt)
-        self.is_seamless_ornot_comboBox2.setEnabled(False)
+        self.is_seamless_ornot_comboBox2.setEnabled(True)
         self.is_seamless_ornot_comboBox2.setGeometry(QtCore.QRect(1020, 520, 91, 31))
         self.is_seamless_ornot_comboBox2.setStyleSheet("background-color: rgb(90, 90, 90);\n"
 "color: rgb(255, 252, 253);")
@@ -547,7 +547,7 @@ class Ui_MainWindow(object):
         self.action3.setObjectName("action3")
 
         self.retranslateUi(MainWindow)
-        self.SpecPic.setCurrentIndex(0)
+        self.SpecPic.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

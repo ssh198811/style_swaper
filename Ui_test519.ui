@@ -74,7 +74,7 @@ font: 12pt &quot;Arial&quot;;</string>
      <string notr="true">background-color: rgb(0, 59, 89);</string>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="txt">
      <property name="enabled">
@@ -298,7 +298,7 @@ font: 12pt &quot;Arial&quot;;</string>
      </widget>
      <widget class="QComboBox" name="is_seamless_ornot_comboBox2">
       <property name="enabled">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <property name="geometry">
        <rect>

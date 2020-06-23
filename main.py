@@ -107,7 +107,7 @@ class MyDeepDelThread(QThread):
                 os.chmod(path, stat.S_IWRITE)
                 os.remove(path)
                 print('已强制删除')
-        if os.path.isdir(path) and 'dds_output' not in path and 'style_transfer' in path:
+        if os.path.isdir(path) and 'final_output' not in path and 'style_transfer' in path:
             for item in os.listdir(path):
                 item_path = os.path.join(path, item)
                 if os.path.isfile(item_path):
@@ -295,6 +295,9 @@ if __name__ == '__main__':
                 self.ui.pushButton.setEnabled(False)
                 self.ui.choose_pic_style_button2_2.setEnabled(False)
                 self.ui.savePic_button3.setEnabled(False)
+                self.ui.reset_button.setEnabled(False)
+                self.ui.delete_files_button.setEnabled(False)
+
             if GlobalConfig.b_sync_block_op_in_progress is False:
 
                 self.ui.make_project_dir_button.setEnabled(True)
@@ -312,6 +315,8 @@ if __name__ == '__main__':
                 self.ui.savePic_button1.setEnabled(False)
                 self.ui.savePic_button2.setEnabled(False)
                 self.ui.savePic_button3.setEnabled(False)
+                self.ui.reset_button.setEnabled(True)
+                self.ui.delete_files_button.setEnabled(True)
             # 生成预览图时阻塞
             if GlobalConfig.b_sync_block_in_thread_temp is True:
                 # 生成预览图时
@@ -370,6 +375,7 @@ if __name__ == '__main__':
         # 清除数据
         def del_data(self):
             # 界面恢复
+
             self.combocheckBox1.clearEditText()
             self.combocheckBox1.setEnabled(False)
             self.combocheckBox2.clearEditText()
@@ -391,6 +397,8 @@ if __name__ == '__main__':
             self.ui.pic_style_label3.clear()
             self.ui.pic_style_listWidget3.clear()
             self.ui.pic_after_label3.clear()
+            GlobalConfig.b_sync_block_save_button = False
+            QApplication.processEvents()
             try:
                 # self.del_temp_dir(self.ui.project_base_dir.text())
                 # 删除文件
@@ -589,7 +597,8 @@ if __name__ == '__main__':
                 iconsize = QSize(100, 100)
                 self.ui.pic_style_listWidget1.setIconSize(iconsize)
                 QApplication.processEvents()
-            if self.combocheckBox2.Selectlist() != [] and self.Choosed_style_pics_list != []:
+
+            if  self.Choosed_style_pics_list != [] and self.chosen_file_list1 != []:
                 GlobalConfig.b_sync_block_save_button = True
                 QApplication.processEvents()
 
@@ -1028,7 +1037,7 @@ if __name__ == '__main__':
                 self.ui.pic_style_listWidget2.setIconSize(iconsize)
 
                 QApplication.processEvents()
-            if self.combocheckBox1.Selectlist() != [] and self.Choosed_style_pics_list2 != []:
+            if self.Choosed_style_pics_list2 != [] and self.chosen_file_list != []:
                 GlobalConfig.b_sync_block_save_button = True
                 QApplication.processEvents()
 
@@ -1163,7 +1172,13 @@ if __name__ == '__main__':
                 dds_path = self.chosen_content_list3[i]
                 get_path = PathUtils(_work=self.ui.project_base_dir.text(), dds_path=dds_path)
                 jpg_path = get_path.dds_to_jpg_path()
+                if os.path.exists(jpg_path) is False:
+                    InfoNotifier.InfoNotifier.g_progress_info.append(jpg_path+' 不存在，请先生成图片！')
+                    continue
                 show_before_list.append(jpg_path.replace("\n", ""))
+            if show_before_list == []:
+                
+                return
             for pic in show_before_list:
                 print(pic)
                 pix = QPixmap(pic)
