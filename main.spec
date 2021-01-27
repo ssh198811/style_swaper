@@ -2,9 +2,9 @@
 # -*- mode: python -*-
 
 block_cipher = None
-data_map =  [("dds_to_jpg","dds_to_jpg"),("result_moss","result_moss"),("model_state.pth","."),("data.json",".")]
+data_map =  [("dds_to_jpg","dds_to_jpg"),("model_state.pth","."),("data.json","."),("texconv.exe",".")]
 a=Analysis(['main.py'],
-            pathex=['E:\\PycharmProject\\style_swaper-master'],
+            pathex=['E:\\Users\\shishaohua.SHISHAOHUA1\\PycharmProjects\\style_swaper_new'],
             binaries=[],
             datas=data_map,
             hiddenimports=[],

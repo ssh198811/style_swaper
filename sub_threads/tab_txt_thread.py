@@ -16,6 +16,7 @@ import gen_jpg_tga_from_dds
 import json
 import gen_lerp_ret
 from path_util import PathUtils
+from path_util import PathDic
 from button_state import GlobalConfig
 
 # tab_txt
@@ -75,18 +76,20 @@ class MyGenStyleTempThreadTabTxt(QThread):
         self.gen_style()
 
 
+
 class MyGenStyleThreadTabTxt(QThread):
     _signal = pyqtSignal()
 
     def __init__(self):
         super(MyGenStyleThreadTabTxt, self).__init__()
-        self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+        self.texconv_path = os.getcwd() + "/texconv.exe"
         self.txt_path = ''
         self.work_ = ''
         self.lerg_value = 50
         self.chosen_style_pic = ''
         self.chosen_content_file_list = []
         self.dir_dict = {}
+        self.path_dic = PathDic()
 
     def set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic='', chosen_content_file_list=None,
                  dir_dict=None):
@@ -164,6 +167,11 @@ class MyGenStyleThreadTabTxt(QThread):
                     InfoNotifier.InfoNotifier.g_progress_info.append(f"将{lerp_out_path}转化为DDS格式···")
                 except BaseException as bec:
                     InfoNotifier.InfoNotifier.g_progress_info.append(bec)
+
+                self.path_dic.set_src_dst_path_to_map(file, get_path.get_relative_dds_output_path())
+
+        self.path_dic.serilize_to_file(get_path.work_output, get_path.get_txt_name(), get_path.get_style_name())
+
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
         GlobalConfig.b_sync_block_op_in_progress = False
         self._signal.emit()
@@ -177,13 +185,14 @@ class MyGenSeamlessThreadTabTxt(QThread):
 
     def __init__(self):
         super(MyGenSeamlessThreadTabTxt, self).__init__()
-        self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+        self.texconv_path = os.getcwd() + "/texconv.exe"
         self.txt_path = ''
         self.work_ = ''
         self.lerg_value = 50
         self.chosen_style_pic = ''
         self.chosen_content_file_list = []
         self.dir_dict = {}
+        self.path_dic = PathDic()
 
     def set_para(self, txt_path='', work_='', lerg_value=50, chosen_style_pic='', chosen_content_file_list=None,
                  dir_dict=None):
@@ -318,7 +327,9 @@ class MyGenSeamlessThreadTabTxt(QThread):
                 os.system(main_cmd)
                 InfoNotifier.InfoNotifier.g_progress_info.append(f'将{dds_output}{file_name}转化为DDS格式···')
 
+                self.path_dic.set_src_dst_path_to_map(file, get_path.get_relative_dds_output_path())
 
+        self.path_dic.serilize_to_file(get_path.work_output, get_path.get_txt_name(), get_path.get_style_name())
         InfoNotifier.InfoNotifier.g_progress_info.append("保存完成")
         GlobalConfig.b_sync_block_op_in_progress = False
         self._signal.emit()

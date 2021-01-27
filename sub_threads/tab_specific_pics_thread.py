@@ -93,7 +93,7 @@ class MyGenStyleThreadTabPics(QThread):
 
     def __init__(self):
         super(MyGenStyleThreadTabPics, self).__init__()
-        self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+        self.texconv_path = os.getcwd() + "/texconv.exe"
         self.project_base = ''
         self.content_list = []
         self.chosen_style_pic = ''
@@ -161,7 +161,7 @@ class MyGenSeamlessStyleThreadTabPics(QThread):
 
     def __init__(self):
         super(MyGenSeamlessStyleThreadTabPics, self).__init__()
-        self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+        self.texconv_path = os.getcwd() + "/texconv.exe"
         self.project_base = ''
         self.content_list = []
         self.chosen_style_pic = ''

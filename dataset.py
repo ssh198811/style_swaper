@@ -27,12 +27,14 @@ class PreprocessDataset(Dataset):
     def __init__(self, content_dir, style_dir, transforms=trans):
         content_dir_resized = content_dir + '_resized'
         style_dir_resized = style_dir + '_resized'
-        if not (os.path.exists(content_dir_resized) and
-                os.path.exists(style_dir_resized)):
+        if not os.path.exists(content_dir_resized):
             os.mkdir(content_dir_resized)
-            os.mkdir(style_dir_resized)
             self._resize(content_dir, content_dir_resized)
+
+        if not os.path.exists(style_dir_resized):
+            os.mkdir(style_dir_resized)
             self._resize(style_dir, style_dir_resized)
+
         content_images = glob.glob((content_dir_resized + '/*'))
         np.random.shuffle(content_images)
         style_images = glob.glob(style_dir_resized + '/*')

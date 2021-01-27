@@ -88,7 +88,7 @@ class MyGenSeamlessStyleThreadTabFiles(QThread):
         _signal=pyqtSignal()
         def __init__(self):
             super(MyGenSeamlessStyleThreadTabFiles, self).__init__()
-            self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+            self.texconv_path = os.getcwd() + "/texconv.exe"
             self.pad = 256
             self.chosen_style_pic = ''
             self.chosen_content_file_list = []
@@ -258,7 +258,7 @@ class MyGenStyleThreadTabFiles(QThread):
 
         def __init__(self):
             super(MyGenStyleThreadTabFiles, self).__init__()
-            self.texconv_path = os.getcwd() + "\\result_moss/texconv.exe"
+            self.texconv_path = os.getcwd() + "/texconv.exe"
             self.chosen_style_pic = ''
             self.chosen_content_file_list = None
             self.project_base = ''
@@ -332,7 +332,7 @@ class MyGenStyleThreadTabFiles(QThread):
                     print(be)
                 # combine alpha channel
                 tga_img = Image.open(tga_path)
-                jpg_img = Image.open(jpg_path)
+                jpg_img = Image.open(lerp_real_path)
                 ir_tmp, ig_tmp, ib_tmp, ia = tga_img.split()
                 ir, ig, ib = jpg_img.split()
                 tga_img = Image.merge('RGBA', (ir, ig, ib, ia))

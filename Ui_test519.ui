@@ -74,7 +74,7 @@ font: 12pt &quot;Arial&quot;;</string>
      <string notr="true">background-color: rgb(0, 59, 89);</string>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="txt">
      <property name="enabled">

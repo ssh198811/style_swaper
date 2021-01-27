@@ -1,6 +1,42 @@
 import os
 
 
+class PathDic:
+    def __init__(self):
+        self.mapping_dic = {}
+
+    def set_src_dst_path_to_map(self, src, dst):
+        self.mapping_dic[src] = dst
+
+    def serilize_to_file(self, _workspace='', _map='', _style=''):
+        tmp_dic = {}
+        file_name = _workspace + '/' + _map + '_' + _style + '.txt'
+
+        if os.path.exists(file_name):
+            with open(file_name) as file:
+                line = file.readline()
+                while line:
+                    value, key = line.split('\t')
+                    value = str(value).strip()
+                    key = str(key).strip()
+
+                    tmp_dic[key] = value
+                    line = file.readline()
+            file.close()
+
+        with open(file_name, 'w+') as file:
+            #########
+            for key in self.mapping_dic:
+                tmp_dic[key] = self.mapping_dic[key]  # update dic
+
+            for key in tmp_dic:
+                data = tmp_dic[key] + '\t' + key +'\n'
+                file.write(data)
+                print('writing ' + data)
+        file.close()
+
+        self.mapping_dic = {}
+
 class PathUtils:
     def __init__(self, _work='', _style_path='', dds_path='', txt_file_=''):
         # self.ui = ui.Ui_MainWindow()
@@ -12,6 +48,9 @@ class PathUtils:
         self.work_output = self.work_ + '/data/style_transfer'
         self.txt_name = os.path.basename(txt_file_).split('.')[0]
 
+    def get_txt_name(self):
+        return self.txt_name
+
     # dds原图真实路径
     def real_dds_path(self):
         return f"{self.work_}/{self.dds_path}"
@@ -22,7 +61,7 @@ class PathUtils:
 
     # 原图转 tga 保存地址
     def dds_to_tga_path(self):
-        return self.work_output + '/'+self.dds_path.replace('.dds', '.tga')
+        return self.work_output + '/' + self.dds_path.replace('.dds', '.tga')
 
     def get_parent_name(self):
         return os.path.dirname(self.dds_path.replace("\n", ""))
@@ -38,6 +77,10 @@ class PathUtils:
     def get_style_path(self):
         return f"{self.work_output}/{self.get_parent_name()}/style_output/{self.get_style_name()}/{self.file_name_jpg}"
 
+    # 风格特征图保存路径
+    def get_style_feather_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/style_output/{self.get_style_name()}/feather_{self.file_name_jpg}"
+
     # lerp图
     def get_jpg_lerp_path(self):
         return f"{self.work_output}/{self.get_parent_name()}/lerp_output/{self.get_style_name()}/{self.file_name_jpg}"
@@ -46,8 +89,13 @@ class PathUtils:
         return f"{self.work_output}/{self.get_parent_name()}/lerp_output/{self.get_style_name()}/{self.file_name_tga}"
 
     # dds图
+    def get_relative_dds_output_path(self):
+        return f"data/style_transfer/final_output/{self.txt_name}/{self.get_style_name()}/{self.dds_path}"
+
+    # dds图
     def get_dds_output_path(self):
         return f"{self.work_output}/final_output/{self.get_style_name()}/{self.get_parent_name()}/"
+
     # dds图-txt
     def get_dds_output_path_txt(self):
         return f"{self.work_output}/final_output/{self.txt_name}/{self.get_style_name()}/{self.get_parent_name()}/"
@@ -64,6 +112,11 @@ class PathUtils:
     def get_expanded_style_path(self):
         return f"{self.work_output}/{self.get_parent_name()}/expanded/style_output/{self.get_style_name()}/" \
                f"{self.file_name_jpg}"
+
+    # expanded-style
+    def get_expanded_style_feather_path(self):
+        return f"{self.work_output}/{self.get_parent_name()}/expanded/style_output/{self.get_style_name()}/" \
+               f"feather_{self.file_name_jpg}"
 
     # expanded_lerp
     def get_expanded_lerp_path_jpg(self):
@@ -83,22 +136,28 @@ class PathUtils:
     def get_seamless_dds_path(self):
         return f"{self.work_output}/{self.get_parent_name()}/expanded/dds_output/{self.get_style_name()}/"
 
+
 # get temp files' path from jpg path
 class PathTemp:
     def __init__(self, jpg_path_='', style_path_=''):
         self.jpg_path = jpg_path_
         self.style_path = style_path_
         self.s_name = os.path.basename(self.style_path).split('.')[0]
+
     def get_temp_dir_path(self):
         # temp文件夹
         return os.path.dirname(self.jpg_path) + '/temp/'
+
     def get_temp_after_jpg_path(self):
         return os.path.dirname(self.jpg_path) + '/temp/' + self.s_name + '/' + os.path.basename(
-                        self.jpg_path)
+            self.jpg_path)
+
+    def get_temp_feather_after_jpg_path(self):
+        return os.path.dirname(self.jpg_path) + '/temp/' + self.s_name + '/' + 'feather_' + os.path.basename(
+            self.jpg_path)
+
     def get_temp_lerp_path(self):
         return os.path.dirname(self.jpg_path) + '/temp/lerp.jpg'
-
-
 
 
 if __name__ == '__main__':
@@ -106,7 +165,6 @@ if __name__ == '__main__':
                   _style_path=
                   'E:/Users/shishaohua.SHISHAOHUA1/PycharmProjects/style_swaper/style_swaper/style_test/1.jpg',
                   dds_path='data/source/maps_source/texture/wj_gb路标003_01h.dds', txt_file_='G:/稻香村.txt')
-
 
     print(a.real_dds_path())
     print(a.dds_to_jpg_path())
@@ -126,4 +184,3 @@ if __name__ == '__main__':
     print(a.get_expanded_lerp_path_tga())
     print(a.get_seamless_path())
     print(a.get_seamless_dds_path())
-

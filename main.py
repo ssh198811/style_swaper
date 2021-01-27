@@ -498,20 +498,21 @@ if __name__ == '__main__':
         def choose_multi_dir_tab_files(self):
             # 选择导入目录
             self.project_base = self.ui.project_base_dir.text()
+            self.project_base = self.project_base.replace('\\', '/')
 
-            if self.ui.project_base_dir.text() == '':
+            if self.project_base == '':
                 InfoNotifier.InfoNotifier.g_progress_info.append("请选择根目录")
                 return
 
-            directory = QtWidgets.QFileDialog.getExistingDirectory(self, "选择文件夹", self.ui.project_base_dir.text())
+            directory = QtWidgets.QFileDialog.getExistingDirectory(self, "选择文件夹", self.project_base)
             if len(directory) == 0:
                 return
             directory_temp = directory.split('/')
             # 显示路径最后两级
             if directory_temp[-2]+'/'+directory_temp[-1] not in self.multi_dir_project:
-                rela_path = directory.replace(self.ui.project_base_dir.text()+'/', "")
+                rela_path = directory.replace(self.project_base+'/', "")
                 self.files_dict[directory_temp[-2]+'/'+directory_temp[-1]] = rela_path
-                self.multi_relative_dir.append(directory.replace(self.ui.project_base_dir.text()+'/', ""))
+                self.multi_relative_dir.append(directory.replace(self.project_base+'/', ""))
                 self.multi_dir_project.append(directory_temp[-2]+'/'+directory_temp[-1])
                 print(self.multi_dir_project)
             print(self.multi_relative_dir)
@@ -727,7 +728,10 @@ if __name__ == '__main__':
             show_list = self.show_list
             dirs = show_list[i]
             pix = QPixmap(dirs)
+            pix.scaledToWidth(301)
+            pix.scaledToHeight(251)
             self.ui.pic_before_label1.setPixmap(pix)
+            self.ui.pic_before_label1.setScaledContents(True)
 
         # 预览风格化图
         def preview_style_pic_in_label(self):
@@ -740,7 +744,7 @@ if __name__ == '__main__':
                 after_pic_dir = get_path.get_temp_after_jpg_path()
                 self.temp_lerp_pic_tab_file = get_path.get_temp_lerp_path()
                 img, _ = gen_lerp_ret.lerp_img(content_pic, after_pic_dir, float(self.value_slider))
-                cv2.imwrite(self.temp_lerp_pic_tab_file, img)
+                gen_lerp_ret.write_img(img, self.temp_lerp_pic_tab_file)
                 self.ui.pic_after_label1.clear()
                 item = QListWidgetItem()
                 item.setIcon(QIcon(self.temp_lerp_pic_tab_file))
@@ -955,6 +959,7 @@ if __name__ == '__main__':
             dirs = show_list[i]
             pix = QPixmap(dirs)
             self.ui.pic_before_label2.setPixmap(pix)
+            self.ui.pic_before_label2.setScaledContents(True)
 
         def choose_style_pics_tab_txt(self):
             self.ui.pic_style_listWidget2.clear()

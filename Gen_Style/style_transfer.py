@@ -5,14 +5,14 @@ from torchvision import transforms
 from torchvision.utils import save_image
 from model import VGGEncoder, Decoder
 from style_swap import style_swap
-from path_util import PathUtils,PathTemp
+from path_util import PathUtils, PathTemp
 import InfoNotifier
 img_base = 256
-img_pad = 100
+img_pad = 32
 
-patch_size = 1
+patch_size = 3
 model_state_path = "./model_state.pth"
-
+# model_state_path = "./model_state_0_7_1.pth"
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
@@ -76,8 +76,8 @@ def style_main_temp(pics_dir=None, style_dir=''):
                         if os.path.exists(os.path.dirname(style_output)) is False:
                             os.makedirs(os.path.dirname(style_output))
                         tar.save(style_output, quality=100)
-                        print(f'result saved into files{style_output}/')
-                        InfoNotifier.InfoNotifier.g_progress_info.append(f'已生成{style_output}/' )
+                        print(f'result saved into files {style_output}')
+                        InfoNotifier.InfoNotifier.g_progress_info.append(f'已生成 {style_output}')
                     else:
 
                         InfoNotifier.InfoNotifier.g_progress_info.append(f'{style_output}/'+' 已存在，跳过')
@@ -314,8 +314,9 @@ def get_target_img(file_path, device, e, d, s_tensor, c_name, s_name, style_outd
     # 切分大图为小图
     for i in range(width_d):
         for j in range(height_d):
-            c_div = c.crop((i * img_base - img_pad, j * img_base - img_pad, (i + 1) * img_base + img_pad,
-                            (j + 1) * img_base + img_pad))
+            region = (i * img_base - img_pad, j * img_base - img_pad, (i + 1) * img_base + img_pad,
+                            (j + 1) * img_base + img_pad)
+            c_div = c.crop(region)
 
             c_tensor = trans(c_div).unsqueeze(0).to(device)
 
@@ -327,10 +328,13 @@ def get_target_img(file_path, device, e, d, s_tensor, c_name, s_name, style_outd
                 del sf
                 out = d(style_swap_res)
 
-            c_denorm = denorm(c_tensor, device)
+            # c_denorm = denorm(c_tensor, device)
             out_denorm = denorm(out, device)
-            res = torch.cat([c_denorm, out_denorm], dim=0)
-            res = res.to('cpu')
+
+            # out_denorm = out_denorm.to('cpu')
+
+            # res = torch.cat([c_denorm, out_denorm], dim=0)
+            # res = res.to('cpu')
 
             output_name = f'{c_name}_{s_name}_{i}_{j}'
             save_image(out_denorm, f'{style_outdir}/{output_name}.jpg', nrow=1)
@@ -338,7 +342,10 @@ def get_target_img(file_path, device, e, d, s_tensor, c_name, s_name, style_outd
             img_tmp = Image.open(f'{style_outdir}/{output_name}.jpg')
             img_tmp = img_tmp.crop((img_pad, img_pad, img_tmp.width - img_pad, img_tmp.height - img_pad))
             tar.paste(img_tmp, (i * img_base, j * img_base, (i + 1) * img_base, (j + 1) * img_base))
+            print(f"saving  {style_outdir}/{output_name}.jpg")
             os.unlink(f'{style_outdir}/{output_name}.jpg')
+
+
     return tar
 
 
